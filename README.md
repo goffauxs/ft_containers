@@ -1,3 +1,3 @@
 # ft_containers
 
-reimplement vector, map, and stack in a new namespace without the use of STL.
+Reimplement vector, map, and stack containers in a new namespace without the use of STL.
