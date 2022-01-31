@@ -1,4 +1,5 @@
-#include "iterator.hpp"
+#pragma once
+#include <cstddef>
 
 namespace ft
 {
@@ -39,5 +40,16 @@ namespace ft
 		typedef const T*					pointer;
 		typedef const T&					reference;
 		typedef random_access_iterator_tag	iterator_category;
+	};
+
+	template <class Category, class T, class Distance = ptrdiff_t, class Pointer = T*, class Reference = T&>
+	struct iterator
+	{
+	public:
+		typedef Category	iterator_category;
+		typedef T			value_type;
+		typedef Distance	difference_type;
+		typedef Pointer		pointer;
+		typedef Reference	reference;
 	};
 }

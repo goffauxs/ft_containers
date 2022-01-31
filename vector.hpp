@@ -6,7 +6,7 @@
 
 namespace ft
 {
-	template <class T, class Alloc = std::allocator<T>>
+	template < class T, class Alloc = std::allocator<T> >
 	class vector
 	{
 	public:
@@ -46,7 +46,7 @@ namespace ft
 		// Range constructor
 		template <class InputIterator>
 		vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type(),
-			ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
+			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
 			size_type n = ft::distance(first, last);
 			this->_start = this->_alloc.allocate(n);
@@ -105,9 +105,9 @@ namespace ft
 		// resize
 		void resize(size_type n, value_type val = value_type())
 		{
-			if (n > this->size())
+			// if (n > this->size())
 				
-			else if (n < this->size())
+			// else if (n < this->size())
 
 		}
 
@@ -141,17 +141,23 @@ namespace ft
 		/ MODIFIERS
 		*/
 
+		// assign
 		template <class InputIterator>
 		void assign(InputIterator first, InputIterator last,
-			ft::enable_if<!ft::is_integral<InputIterator>::value>::true* = NULL)
+			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
 			
+		}
+
+		void assign(size_type n, const value_type& val)
+		{
+
 		}
 
 		// insert
 		iterator insert(iterator position, const value_type& val)
 		{
-			
+			this->insert(position, 1, val);
 		}
 
 		void insert(iterator position, size_type n, const value_type& val)
@@ -166,15 +172,37 @@ namespace ft
 				this->_alloc.construct(&(*end_pos), *it);
 				this->_alloc.destroy(&(*it));
 			}
-			for (size_type i = 0; i < n; i++)
+			for (difference_type i = 0; i < n; i++)
 				this->_alloc.construct((&(*position) + i), val);
 		}
 
 		template <class InputIterator>
 		void insert(iterator position, InputIterator first, InputIterator last,
-			ft::enable_if<ft::is_integral<InputIterator>::value>::type* = NULL)
+			typename ft::enable_if<ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
-			
+			difference_type n = ft::distance(first, last);
+			if (n <= 0)
+				return ;
+			if (this->size() + n > this->capacity())
+				this->reserve(this->size() + n);
+			iterator end_pos = position + n;
+			for (iterator it = position; it != end_pos; it++, end_pos++)
+			{
+				this->_alloc.construct(&(*end_pos), *it);
+				this->_alloc.destroy(&(*it));
+			}
+			for (difference_type i = 0; first != last; first++, i++)
+				this->_alloc.construct((&(*position) + i), *first);
+		}
+
+		// clear
+		void clear()
+		{
+			while (this->_start != this->_finish)
+			{
+				this->_alloc.destroy(this->_finish);
+				this->_finish--;
+			}
 		}
 	};
 }

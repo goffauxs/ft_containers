@@ -22,7 +22,7 @@ namespace ft
 		random_access_iterator(const random_access_iterator& other) : _ptr(other._ptr) {}
 		
 		// Copy assignation
-		random_access_iterator& operator=(const random_access_iterator& rhs) { if (this != &rhs) this->_ptr = other._ptr; return *this; }
+		random_access_iterator& operator=(const random_access_iterator& rhs) { if (this != &rhs) this->_ptr = rhs._ptr; return *this; }
 
 		// Destructor
 		~random_access_iterator() {}

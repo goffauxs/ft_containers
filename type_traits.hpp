@@ -1,15 +1,17 @@
+#pragma once
+
 namespace ft
 {
 	template <typename T, T val>
 	struct integral_constant
 	{
-		static	T						value = val;
-		typedef	T						value_type;
-		typedef	integral_constant<T, val>	type;
+		static const	T							value = val;
+		typedef			T							value_type;
+		typedef			integral_constant<T, val>	type;
 	};
 
 	template<typename T, T val>
-	T integral_constant<T, val>::value;
+	const T integral_constant<T, val>::value;
 
 	typedef integral_constant<bool, true>	true_type;
 	typedef integral_constant<bool, false>	false_type;
