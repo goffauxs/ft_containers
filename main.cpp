@@ -1,5 +1,5 @@
 #include <vector>
-#include "vector.hpp"
+// #include "vector.hpp"
 #include <iostream>
 
 int main()
@@ -23,10 +23,24 @@ int main()
 	// for (std::vector<int>::iterator it = output_vector.begin(); it != output_vector.end(); it++)
 	// 	std::cout << *it << std::endl;
 
-	ft::vector<int> v;
+	// ft::vector<int> v;
+
+	int tab[12] = { 1, 2, 3, 4, 0, 0, 0, 5, 6, 7, 8, 9 };
+	std::vector<int> v(tab, tab + sizeof(tab) / sizeof(tab[0]));
 
 	std::cout << "[";
-	for (ft::vector<int>::iterator it = v.begin(); it != v.end(); it++)
+	for (std::vector<int>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		std::cout << " " << *it;
+		if (it != v.end() - 1)
+			std::cout << ",";
+	}
+	std::cout << " ]" << std::endl;
+
+	std::rotate(v.begin() + 4, v.begin() + 7, v.end());
+
+	std::cout << "[";
+	for (std::vector<int>::iterator it = v.begin(); it != v.end(); it++)
 	{
 		std::cout << " " << *it;
 		if (it != v.end() - 1)

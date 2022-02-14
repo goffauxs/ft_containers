@@ -69,7 +69,9 @@ namespace ft
 		// Assignement operator
 		vector& operator=(const vector& rhs)
 		{
-
+			if (this != &rhs)
+				this->assign(rhs.begin(), rhs.end());
+			return *this;
 		}
 
 		/*
@@ -105,10 +107,15 @@ namespace ft
 		// resize
 		void resize(size_type n, value_type val = value_type())
 		{
-			// if (n > this->size())
-				
-			// else if (n < this->size())
-
+			if (n > this->max_size())
+				throw std::out_of_range("vector::resize");
+			if (n > this->size())
+				this->insert(this->end(), n - this->size(), val);
+			else if (n < this->size())
+			{
+				for (iterator it = this->end(); it != this->begin() + n; it--, this->_finish--)
+					this->_alloc.destroy(this->_finish);
+			}
 		}
 
 		// capacity
@@ -138,6 +145,37 @@ namespace ft
 		}
 
 		/*
+		/ ELEMENT ACCESS
+		*/
+
+		// operator[]
+		reference operator[](size_type n) { return this->_start[n]; }
+		const_reference operator[](size_type n) const { return this->_start[n]; }
+
+		// at
+		reference at(size_type n)
+		{
+			if (n > this->size())
+				throw std::out_of_range("vector::at")
+			return this->_start[n];
+		}
+
+		const_reference at(size_type n) const
+		{
+			if (n > this->size())
+				throw std::out_of_range("vector::at")
+			return this->_start[n];
+		}
+
+		// front
+		reference front() { return *this->_start; }
+		const_reference front() const { return *this->_start; }
+
+		// back
+		reference back() { return *(this->_finish - 1); }
+		const_reference back() const { return *(this->_finish - 1); }
+
+		/*
 		/ MODIFIERS
 		*/
 
@@ -146,13 +184,46 @@ namespace ft
 		void assign(InputIterator first, InputIterator last,
 			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
-			
+			difference_type n = ft::distance(first, last);
+			if (n > this->capacity())
+			{
+				this->reserve(n);
+				this->_finish = this->_start;
+			}
+			else
+				this->clear();
+			for (iterator it = first; it != last; it++, this->_finish++)
+				this->_alloc.construct(this->finish, *it);
 		}
 
 		void assign(size_type n, const value_type& val)
 		{
-
+			if (n > this->capacity())
+			{
+				this->reserve(n);
+				this->_finish = this->_start;
+			}
+			else
+				this->clear();
+			while (n--)
+				this->_alloc.construct(this->_finish++, val);
 		}
+
+		// push_back
+		void push_back(const value_type& val)
+		{
+			if (this->_end_of_storage == this->_finish)
+			{
+				if (!this->capacity())
+					this->reserve(1);
+				else
+					this->reserve(this->capacity() * 2);
+			}
+			this->_alloc.construct(this->_finish++, val);
+		}
+
+		// pop_back
+		void pop_back() { this->_alloc.destroy(--this->_finish); }
 
 		// insert
 		iterator insert(iterator position, const value_type& val)
@@ -193,6 +264,26 @@ namespace ft
 			}
 			for (difference_type i = 0; first != last; first++, i++)
 				this->_alloc.construct((&(*position) + i), *first);
+		}
+
+		// erase
+		iterator erase(iterator position)
+		{
+			iterator tmp = position;
+			this->_alloc.destroy(position);
+			for (; tmp != this->end(); tmp++)
+				*tmp = *(tmp + 1);
+			this->pop_back();
+			return position;
+		}
+
+		iterator erase(iterator first, iterator last)
+		{
+			for (iterator it = first; it != last; it++)
+				this->_alloc.destroy(it);
+			iterator tmp = first;
+			for (iterator it = tmp + 1; it != last; it++, tmp++)
+				
 		}
 
 		// clear
