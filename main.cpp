@@ -1,50 +1,60 @@
 #include <vector>
-// #include "vector.hpp"
+#include <list>
+#include "vector.hpp"
 #include <iostream>
+
+#define TESTED_NAMESPACE ft
+
+#define T_SIZE_TYPE typename TESTED_NAMESPACE::vector<T>::size_type
+
+template <typename T>
+void	printSize(TESTED_NAMESPACE::vector<T> const &vct, bool print_content = true)
+{
+	const T_SIZE_TYPE size = vct.size();
+	const T_SIZE_TYPE capacity = vct.capacity();
+	const std::string isCapacityOk = (capacity >= size) ? "OK" : "KO";
+	// Cannot limit capacity's max value because it's implementation dependent
+
+	std::cout << "size: " << size << std::endl;
+	std::cout << "capacity: " << isCapacityOk << std::endl;
+	std::cout << "max_size: " << vct.max_size() << std::endl;
+	if (print_content)
+	{
+		typename TESTED_NAMESPACE::vector<T>::const_iterator it = vct.begin();
+		typename TESTED_NAMESPACE::vector<T>::const_iterator ite = vct.end();
+		std::cout << std::endl << "Content is:" << std::endl;
+		for (; it != ite; ++it)
+			std::cout << "- " << *it << std::endl;
+	}
+	std::cout << "###############################################" << std::endl;
+}
 
 int main()
 {
+	std::list<int> lst;
+	std::list<int>::iterator lst_it;
+	for (int i = 1; i < 5; ++i)
+		lst.push_back(i * 3);
 
-	// std::vector<int> input_vector(10, 1);
-	// std::vector<int> output_vector(30);
+	TESTED_NAMESPACE::vector<int> vct(lst.begin(), lst.end());
+	printSize(vct);
 
-	// output_vector.insert(output_vector.begin(), 10, 5);
+	lst_it = lst.begin();
+	for (int i = 1; lst_it != lst.end(); ++i)
+		*lst_it++ = i * 5;
+	vct.assign(lst.begin(), lst.end());
+	printSize(vct);
 
-	// std::vector<int>::iterator first = input_vector.begin();
-	// std::vector<int>::iterator last = input_vector.end();
+	vct.insert(vct.end(), lst.rbegin(), lst.rend());
+	printSize(vct);
 
-	// for (std::vector<int>::iterator it = output_vector.begin(); it != output_vector.end(); it++)
-	// 	std::cout << *it << std::endl;
+	vct.insert(vct.end(), 13);
 
-	// std::cout << std::endl;
+	TESTED_NAMESPACE::vector<int> v2;
 
-	// output_vector.insert(output_vector.begin(), last, first);
+	std::cout << v2.capacity() << std::endl;
+	v2.insert(v2.end(), 1);
+	std::cout << v2.capacity() << std::endl;
 
-	// for (std::vector<int>::iterator it = output_vector.begin(); it != output_vector.end(); it++)
-	// 	std::cout << *it << std::endl;
-
-	// ft::vector<int> v;
-
-	int tab[12] = { 1, 2, 3, 4, 0, 0, 0, 5, 6, 7, 8, 9 };
-	std::vector<int> v(tab, tab + sizeof(tab) / sizeof(tab[0]));
-
-	std::cout << "[";
-	for (std::vector<int>::iterator it = v.begin(); it != v.end(); it++)
-	{
-		std::cout << " " << *it;
-		if (it != v.end() - 1)
-			std::cout << ",";
-	}
-	std::cout << " ]" << std::endl;
-
-	std::rotate(v.begin() + 4, v.begin() + 7, v.end());
-
-	std::cout << "[";
-	for (std::vector<int>::iterator it = v.begin(); it != v.end(); it++)
-	{
-		std::cout << " " << *it;
-		if (it != v.end() - 1)
-			std::cout << ",";
-	}
-	std::cout << " ]" << std::endl;
+	return (0);
 }
