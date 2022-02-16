@@ -46,15 +46,18 @@ int main()
 	printSize(vct);
 
 	vct.insert(vct.end(), lst.rbegin(), lst.rend());
+	std::cout << std::endl;
 	printSize(vct);
 
-	vct.insert(vct.end(), 13);
-
-	TESTED_NAMESPACE::vector<int> v2;
-
-	std::cout << v2.capacity() << std::endl;
-	v2.insert(v2.end(), 1);
-	std::cout << v2.capacity() << std::endl;
-
 	return (0);
+
+	// std::vector<int> v;
+
+	// std::cout << "size: " << v.size() << " - capacity: " << v.capacity() << std::endl;
+	// std::cout << "v.end(): " << &(*v.end()) << " - v.begin(): " << &(*v.begin()) << std::endl;
+
+	// v.reserve(4);
+
+	// std::cout << "v.end() after reserve: " << &(*v.end()) << " - v.begin(): " << &(*v.begin()) << std::endl;
+	// printSize(v);
 }

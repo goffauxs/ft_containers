@@ -28,6 +28,14 @@ namespace ft
 		pointer			_start;
 		pointer			_finish;
 		pointer			_end_of_storage;
+
+		size_type check_len(size_type n, const char* s) const
+		{
+			if (this->max_size() - this->size() < n)
+				throw std::length_error(s);
+			const size_type len = this->size() + std::max(this->size(), n);
+			return (len < this->size() || len > this->max_size()) ? this->max_size : len;
+		}
 	public:
 		// Default constructor
 		explicit vector(const allocator_type& alloc = allocator_type())
@@ -142,8 +150,8 @@ namespace ft
 				this->_finish = this->_start;
 				this->_end_of_storage = this->_start + n;
 				for (iterator it = old_start; it != old_end; it++, this->_finish++) this->_alloc.construct(this->_finish, *it);
-				for (; old_end != old_start; old_end--) this->_alloc.destroy(&(*old_end));
-				this->_alloc.deallocate(&(*old_start), old_capacity);
+				for (; old_end != old_start; old_end--) this->_alloc.destroy(old_end.base());
+				this->_alloc.deallocate(old_start.base(), old_capacity);
 			}
 		}
 
@@ -236,18 +244,43 @@ namespace ft
 
 		void insert(iterator position, size_type n, const value_type& val)
 		{
-			if (n == 0)
-				return ;
-			if (this->capacity() == 0)
-				this->reserve(n);
-			else if (this->size() + n > this->capacity())
-				this->reserve(this->capacity() * 2);
-			iterator end_pos = position + n;
-			for (; end_pos != this->end(); end_pos++, position++)
+			if (n != 0)
 			{
-				this->_alloc.construct(&(*end_pos), *position);
-				this->_alloc.destroy(&(*position));
-				this->_alloc.construct(&(*position), val);
+				if (size_type(this->_end_of_storage - this->_finish) >= n)
+				{
+					const size_type elems_after = this->end() - position;
+					pointer old_finish(this->_finish);
+					if (elems_after > n)
+					{
+						std::uninitialized_copy(this->_finish - n, this->_finish, this->_finish);
+						this->_finish += n;
+						std::fill(position.base(), position.base() + n, val);
+					}
+					else
+					{
+						this->_finish = std::uninitialized_fill_n(this->_finish, n - elems_after, val);
+						std::uninitialized_copy(position.base(), old_finish, this->_finish);
+						this->_finish += elems_after;
+						std::fill(position.base(), old_finish, val);
+					}
+				}
+				else
+				{
+					const size_type len = check_len(n, "vector::insert");
+					const size_type elems_before = position - this->begin();
+					pointer new_start(this->_alloc.allocate(len));
+					pointer new_finish(new_start);
+					try
+					{
+						std::uninitialized_fill_n(new_start + elems_before, n, val);
+						
+					}
+					catch (const std::exception& e)
+					{
+						std::cerr << e.what() << std::endl;
+					}
+				}
+				
 			}
 		}
 
@@ -255,27 +288,14 @@ namespace ft
 		void insert(iterator position, InputIterator first, InputIterator last,
 			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
-			size_type n = ft::distance(first, last);
-			if (n <= 0)
-				return ;
-			if (this->capacity() == 0)
-				this->reserve(n);
-			else if (this->size() + n > this->capacity())
-				this->reserve(this->capacity() * 2);
-			iterator end_pos = position + n;
-			for (; end_pos != this->end(); position++, end_pos++, first++)
-			{
-				this->_alloc.construct(&(*end_pos), *position);
-				this->_alloc.destroy(&(*position));
-				this->_alloc.construct(&(*position), *first);
-			}
+
 		}
 
 		// erase
 		iterator erase(iterator position)
 		{
 			iterator tmp = position;
-			this->_alloc.destroy(&(*tmp));
+			this->_alloc.destroy(tmp.base());
 			for (iterator it = tmp + 1; it != this->end(); it++, tmp++)
 				*tmp = *it;
 			this->_alloc.destroy(--this->_finish);
