@@ -36,6 +36,17 @@ namespace ft
 			const size_type len = this->size() + std::max(this->size(), n);
 			return (len < this->size() || len > this->max_size()) ? this->max_size : len;
 		}
+		void destroy(iterator first, iterator last)
+		{
+			for (; first != last; ++first)
+				this->_alloc.destroy(&(*first));
+		}
+		iterator move_backward(iterator first, iterator last, iterator result)
+		{
+			while (last != first)
+				*(--result) = *(--last);
+			return result;
+		}
 	public:
 		// Default constructor
 		explicit vector(const allocator_type& alloc = allocator_type())
@@ -254,33 +265,15 @@ namespace ft
 					{
 						std::uninitialized_copy(this->_finish - n, this->_finish, this->_finish);
 						this->_finish += n;
-						std::fill(position.base(), position.base() + n, val);
 					}
 					else
 					{
-						this->_finish = std::uninitialized_fill_n(this->_finish, n - elems_after, val);
-						std::uninitialized_copy(position.base(), old_finish, this->_finish);
-						this->_finish += elems_after;
-						std::fill(position.base(), old_finish, val);
+
 					}
 				}
 				else
 				{
-					const size_type len = check_len(n, "vector::insert");
-					const size_type elems_before = position - this->begin();
-					pointer new_start(this->_alloc.allocate(len));
-					pointer new_finish(new_start);
-					try
-					{
-						std::uninitialized_fill_n(new_start + elems_before, n, val);
-						
-					}
-					catch (const std::exception& e)
-					{
-						std::cerr << e.what() << std::endl;
-					}
 				}
-				
 			}
 		}
 
@@ -288,7 +281,27 @@ namespace ft
 		void insert(iterator position, InputIterator first, InputIterator last,
 			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
+			if (first != last)
+			{
+				const size_type n = ft::distance(first, last);
+				if (size_type(this->_end_of_storage - this->_finish) >= n)
+				{
+					const size_type elems_after = end() - position;
+					pointer old_finish(this->_finish);
+					if (elems_after > n)
+					{
 
+					}
+					else
+					{
+
+					}
+				}
+				else
+				{
+
+				}
+			}
 		}
 
 		// erase
