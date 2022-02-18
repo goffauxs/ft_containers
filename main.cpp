@@ -3,7 +3,7 @@
 #include "vector.hpp"
 #include <iostream>
 
-#define TESTED_NAMESPACE ft
+#define TESTED_NAMESPACE std
 
 #define T_SIZE_TYPE typename TESTED_NAMESPACE::vector<T>::size_type
 

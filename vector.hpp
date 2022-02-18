@@ -43,9 +43,30 @@ namespace ft
 		}
 		iterator move_backward(iterator first, iterator last, iterator result)
 		{
-			while (last != first)
-				*(--result) = *(--last);
+			while (last != first) *(--result) = *(--last);
 			return result;
+		}
+		void construct_at_end(size_type n, const value_type& x)
+		{
+			while (n > 0)
+			{
+				this->_alloc.construct(&(*this->_finish), x);
+				++this->_finish;
+				--n;
+			}
+		}
+		void construct_forward(pointer begin1, pointer end1, pointer begin2)
+		{
+			for (; begin1 != end1; ++begin1, ++begin2)
+				this->_alloc.construct(&(*begin2), *begin1);
+		}
+		void construct_backward(pointer begin1, pointer end1, pointer end2)
+		{
+			while (end1 != begin1)
+			{
+				this->_alloc.construct(&(*(end2 - 1)), *--end1);
+				--end2;
+			}
 		}
 	public:
 		// Default constructor
@@ -255,24 +276,52 @@ namespace ft
 
 		void insert(iterator position, size_type n, const value_type& val)
 		{
-			if (n != 0)
+			pointer p = &(*position);
+			if (n > 0)
 			{
 				if (size_type(this->_end_of_storage - this->_finish) >= n)
 				{
 					const size_type elems_after = this->end() - position;
+					size_type old_n = n;
 					pointer old_finish(this->_finish);
-					if (elems_after > n)
+					if (n > elems_after)
 					{
-						std::uninitialized_copy(this->_finish - n, this->_finish, this->_finish);
-						this->_finish += n;
+						size_type cx = n - elems_after;
+						this->construct_at_end(cx, val);
+						n -= cx;
 					}
-					else
+					if (n > 0)
 					{
-
+						difference_type diff = old_finish - (p + n);
+						for (pointer i = p + diff; i < old_finish; ++i, ++this->_finish)
+							this->_alloc.construct(&(*this->_finish), *i);
+						this->move_backward(p, p + diff, old_finish);
+						const_pointer xr = static_cast<const_pointer>(val);
+						if (p <= xr && xr < this->_finish)
+							xr += old_n;
+						std::fill_n(p, n, *xr);
 					}
 				}
 				else
 				{
+					size_type len = this->check_len(n, "vector::insert");
+					const size_type elems_before = position - this->begin();
+					pointer first(this->_alloc.allocate(len));
+					pointer new_end_cap(first + len);
+					pointer new_start(first + elems_before);
+					pointer new_finish(new_start);
+					while (n > 0)
+					{
+						this->_alloc.construct(&(*new_finish), val);
+						++new_finish;
+						--n;
+					}
+					this->construct_backward(this->_start, p, new_start);
+					this->construct_forward(p, this->_finish, new_finish);
+					std::swap(this->_start, new_start);
+					std::swap(this->_finish, new_finish);
+					std::swap(this->_end_of_storage, new_end_cap);
+					// TODO probably delete the contents of the old vector
 				}
 			}
 		}
