@@ -34,12 +34,20 @@ namespace ft
 			if (this->max_size() - this->size() < n)
 				throw std::length_error(s);
 			const size_type len = this->size() + std::max(this->size(), n);
-			return (len < this->size() || len > this->max_size()) ? this->max_size : len;
+			return (len < this->size() || len > this->max_size()) ? this->max_size() : len;
 		}
 		void destroy(iterator first, iterator last)
 		{
 			for (; first != last; ++first)
 				this->_alloc.destroy(&(*first));
+		}
+		void move_range(pointer from_s, pointer from_e, pointer to)
+		{
+			pointer old_last = this->_finish;
+			difference_type n = old_last - to;
+			for (pointer i = from_s + n; i < from_e; ++i, ++this->_finish)
+				this->_alloc.construct(&(*this->_finish), *i);
+			this->move_backward(from_s, from_s + n, old_last);
 		}
 		iterator move_backward(iterator first, iterator last, iterator result)
 		{
@@ -55,12 +63,18 @@ namespace ft
 				--n;
 			}
 		}
-		void construct_forward(pointer begin1, pointer end1, pointer begin2)
+		template <typename InputIterator>
+		void construct_at_end(InputIterator first, InputIterator last)
+		{
+			for (; first != last; ++first, ++this->_finish)
+				this->_alloc.construct(&(*this->_finish), *first);
+		}
+		void construct_forward(pointer begin1, pointer end1, pointer& begin2)
 		{
 			for (; begin1 != end1; ++begin1, ++begin2)
 				this->_alloc.construct(&(*begin2), *begin1);
 		}
-		void construct_backward(pointer begin1, pointer end1, pointer end2)
+		void construct_backward(pointer begin1, pointer end1, pointer& end2)
 		{
 			while (end1 != begin1)
 			{
@@ -286,9 +300,9 @@ namespace ft
 					pointer old_finish(this->_finish);
 					if (n > elems_after)
 					{
-						size_type cx = n - elems_after;
-						this->construct_at_end(cx, val);
-						n -= cx;
+						size_type diff = n - elems_after;
+						this->construct_at_end(diff, val);
+						n -= diff;
 					}
 					if (n > 0)
 					{
@@ -330,25 +344,45 @@ namespace ft
 		void insert(iterator position, InputIterator first, InputIterator last,
 			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
-			if (first != last)
+			pointer p = &(*position);
+			difference_type n = ft::distance(first, last);
+			if (n > 0)
 			{
-				const size_type n = ft::distance(first, last);
-				if (size_type(this->_end_of_storage - this->_finish) >= n)
+				if (n <= this->_end_of_storage - this->_finish)
 				{
-					const size_type elems_after = end() - position;
-					pointer old_finish(this->_finish);
-					if (elems_after > n)
+					size_type old_n = n;
+					pointer old_last = this->_finish;
+					InputIterator m = last;
+					difference_type elems_after = this->_finish - p;
+					if (n > elems_after)
 					{
-
+						m = first;
+						difference_type diff = this->_finish - p;
+						ft::advance(m, diff);
+						this->construct_at_end(first, last);
+						n = elems_after;
 					}
-					else
+					if (n > 0)
 					{
-
+						move_range(p, old_last, p + old_n);
+						std::copy(first, m, p);
 					}
 				}
 				else
 				{
-
+					size_type len = this->check_len(n, "vector::insert");
+					const size_type elems_before = position - this->begin();
+					pointer new_first(this->_alloc.allocate(len));
+					pointer new_end_cap(new_first + len);
+					pointer new_start(new_first + elems_before);
+					pointer new_finish(new_start);
+					for (; first != last; ++first, ++new_finish)
+						this->_alloc.construct(new_finish, *first);
+					this->construct_backward(this->_start, p, new_start);
+					this->construct_forward(p, this->_finish, new_finish);
+					std::swap(this->_start, new_start);
+					std::swap(this->_finish, new_finish);
+					std::swap(this->_end_of_storage, new_end_cap);
 				}
 			}
 		}
@@ -367,13 +401,13 @@ namespace ft
 		iterator erase(iterator first, iterator last)
 		{
 			iterator tmp = first;
-			for (; tmp != last; tmp++) this->_alloc.destroy(tmp);
+			for (; tmp != last; tmp++) this->_alloc.destroy(&(*tmp));
 			tmp = first;
 			difference_type n = 0;
 			for (; tmp != last && last != this->end(); tmp++, last++, n++)
 			{
 				*tmp = *last;
-				this->_alloc.destroy(last);
+				this->_alloc.destroy(&(*last));
 			}
 			this->_finish -= n;
 			return first;

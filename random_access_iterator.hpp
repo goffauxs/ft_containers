@@ -24,6 +24,9 @@ namespace ft
 		// Copy assignation
 		random_access_iterator& operator=(const random_access_iterator& rhs) { if (this != &rhs) this->_ptr = rhs._ptr; return *this; }
 
+		// Casting operator
+		operator random_access_iterator<const T>() const { return this->_ptr; }
+
 		// Destructor
 		~random_access_iterator() {}
 
