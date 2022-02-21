@@ -1,3 +1,4 @@
+#pragma once
 #include "random_access_iterator.hpp"
 #include "reverse_iterator.hpp"
 #include "type_traits.hpp"
@@ -41,6 +42,17 @@ namespace ft
 			for (; first != last; ++first)
 				this->_alloc.destroy(&(*first));
 		}
+		template <class InputIterator, class OutputIterator>
+		OutputIterator move(InputIterator first, InputIterator last, OutputIterator result)
+		{
+			while (first != last)
+			{
+				*result = *first;
+				++result;
+				++first;
+			}
+			return result;
+		}
 		void move_range(pointer from_s, pointer from_e, pointer to)
 		{
 			pointer old_last = this->_finish;
@@ -68,6 +80,13 @@ namespace ft
 		{
 			for (; first != last; ++first, ++this->_finish)
 				this->_alloc.construct(&(*this->_finish), *first);
+		}
+		void destruct_at_end(pointer new_last)
+		{
+			pointer soon_to_be_end = this->_finish;
+			while (new_last != soon_to_be_end)
+				this->_alloc.destroy(--soon_to_be_end);
+			this->_finish = new_last;
 		}
 		void construct_forward(pointer begin1, pointer end1, pointer& begin2)
 		{
@@ -144,12 +163,12 @@ namespace ft
 		const_iterator	end() const { return this->_finish; }
 
 		// rbegin
-		reverse_iterator		rbegin()		{ return reverse_iterator(this->begin()); }
-		const_reverse_iterator	rbegin() const	{ return const_reverse_iterator(this->begin()); }
+		reverse_iterator		rbegin()		{ return reverse_iterator(this->end()); }
+		const_reverse_iterator	rbegin() const	{ return const_reverse_iterator(this->end()); }
 
 		// rend
-		reverse_iterator		rend()			{ return reverse_iterator(this->_end()); }
-		const_reverse_iterator	rend() const	{ return const_reverse_iterator(this->end()); }
+		reverse_iterator		rend()			{ return reverse_iterator(this->begin()); }
+		const_reverse_iterator	rend() const	{ return const_reverse_iterator(this->begin()); }
 
 		/*
 		/ CAPACITY
@@ -310,7 +329,7 @@ namespace ft
 						for (pointer i = p + diff; i < old_finish; ++i, ++this->_finish)
 							this->_alloc.construct(&(*this->_finish), *i);
 						this->move_backward(p, p + diff, old_finish);
-						const_pointer xr = static_cast<const_pointer>(val);
+						const_pointer xr = static_cast<const_pointer>(&val);
 						if (p <= xr && xr < this->_finish)
 							xr += old_n;
 						std::fill_n(p, n, *xr);
@@ -400,17 +419,21 @@ namespace ft
 
 		iterator erase(iterator first, iterator last)
 		{
-			iterator tmp = first;
-			for (; tmp != last; tmp++) this->_alloc.destroy(&(*tmp));
-			tmp = first;
-			difference_type n = 0;
-			for (; tmp != last && last != this->end(); tmp++, last++, n++)
-			{
-				*tmp = *last;
-				this->_alloc.destroy(&(*last));
-			}
-			this->_finish -= n;
-			return first;
+			// iterator tmp = first;
+			// for (; tmp != last; tmp++) this->_alloc.destroy(tmp.base());
+			// tmp = first;
+			// difference_type n = 0;
+			// for (; tmp != last && last != this->end(); tmp++, last++, n++)
+			// {
+			// 	*tmp = *last;
+			// 	this->_alloc.destroy(last.base());
+			// }
+			// this->_finish -= n;
+			// return first;
+			pointer p = this->_start + (first - this->begin());
+			if (first != last)
+				this->destruct_at_end(this->move(p + (last - first), this->_finish, p));
+			return iterator(p);
 		}
 
 		// swap
@@ -436,5 +459,40 @@ namespace ft
 				this->_finish--;
 			}
 		}
+
+		/*
+		/ ALLOCATOR
+		*/
+
+		// get_allocator
+		allocator_type get_allocator() const { return this->_alloc; }
 	};
+
+	template <class T, class Alloc>
+	bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+	{
+		return (lhs.size() == rhs.size() 
+				&& ft::equal(lhs.begin(), lhs.end(), rhs.begin()));
+	}
+
+	template <class T, class Alloc>
+	bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+	{
+		return lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+	}
+
+	template <class T, class Alloc>
+	bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) { return !(lhs == rhs); }
+
+	template <class T, class Alloc>
+	bool operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) { return rhs < lhs; }
+
+	template <class T, class Alloc>
+	bool operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) { return !(rhs < lhs); }
+
+	template <class T, class Alloc>
+	bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) { return !(lhs < rhs); }
+
+	template <class T, class Alloc>
+	void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) { x.swap(y); }
 }

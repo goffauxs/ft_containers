@@ -25,6 +25,9 @@ namespace ft
 		template <class Iter>
 		reverse_iterator(const reverse_iterator<Iter>& rev_it) : original(rev_it.base()) {}
 
+		// Casting operator
+		operator reverse_iterator<const Iterator>() const { return this->original; }
+	
 		// Destructor
 		virtual ~reverse_iterator() {}
 
@@ -34,7 +37,7 @@ namespace ft
 		// Dereference operators
 		reference operator*() const { iterator_type tmp(this->original); return *(--tmp); }
 		pointer operator->() const { return &(operator*()); }
-		reference operator[](difference_type n) const { return this->original[-n - 1]; }
+		reference operator[](difference_type n) const { return *(*this + n); }
 
 		// Addition operator
 		reverse_iterator operator+(difference_type n) const { return reverse_iterator(this->original - n); }
@@ -84,8 +87,8 @@ namespace ft
 	}
 
 	// Subtraction operator overload
-	template <class Iterator>
-	typename reverse_iterator<Iterator>::difference_type operator-(const reverse_iterator<Iterator>& lhs, const reverse_iterator<Iterator>& rhs)
+	template <class Iterator1, class Iterator2>
+	typename reverse_iterator<Iterator1>::difference_type operator-(const reverse_iterator<Iterator2>& lhs, const reverse_iterator<Iterator1>& rhs)
 	{
 		return rhs.base() - lhs.base();
 	}
