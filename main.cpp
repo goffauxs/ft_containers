@@ -3,9 +3,12 @@
 #include "vector.hpp"
 #include "stack.hpp"
 #include <stack>
+#include <map>
 #include <iostream>
 
-#define TESTED_NAMESPACE std
 
-#define TESTED_TYPE int
+int main()
+{
+	
+}
 
