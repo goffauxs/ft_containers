@@ -9,6 +9,7 @@
 
 int main()
 {
+	std::map<std::string, int> a;
 	
 }
 
