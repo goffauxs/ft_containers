@@ -6,6 +6,9 @@
 namespace ft
 {
 	template <class NodePtr>
+	bool tree_is_left_child(NodePtr x) { return x == x->parent->left; }
+
+	template <class NodePtr>
 	NodePtr tree_min(NodePtr x)
 	{
 		while (x->left != nullptr)
@@ -165,9 +168,145 @@ namespace ft
 		}
 	}
 
-	enum RB_tree_color { red = false, black = true };
+	template <class NodePtr>
+	void tree_remove(NodePtr root, NodePtr z)
+	{
+		NodePtr y = (z->left == nullptr || z->right == nullptr) ? z : tree_next(z);
+		NodePtr x = y->left != nullptr ? y->left : y->right;
+		NodePtr w = nullptr;
+		if (x != nullptr)
+			x->parent = y->parent;
+		if (tree_is_left_child(y))
+		{
+			y->parent->left = x;
+			if (y != root)
+				w = y->parent->right;
+			else
+				root = x;
+		}
+		else
+		{
+			y->parent->right = x;
+			w = y->parent->left;
+		}
+		bool removed_black = y->is_black;
+		if (y != z)
+		{
+			y->parent = z->parent;
+			if (tree_is_left_child(z))
+				y->parent->left = y;
+			else
+				y->parent->right = y;
+			y->left = z->left;
+			y->left->set_parent(y);
+			y->right = z->right;
+			if (y->right != nullptr)
+				y->right->set_parent(y);
+			y->is_black = z->is_black;
+			if (root == z)
+				root = y;
+		}
+		if (removed_black && root != nullptr)
+		{
+			if (x != nullptr)
+				x->is_black = true;
+			else
+			{
+				while (true)
+				{
+					if (!tree_is_left_child(w))
+					{
+						if (!w->is_black)
+						{
+							w->is_black = true;
+							w->parent->is_black = false;
+							tree_left_rotate(w->parent);
+							if (root == w->left)
+								root = w;
+							w = w->left->right;
+						}
+						if ((w->left == nullptr || w->left->is_black) && (w->right == nullptr || w->right->is_black))
+						{
+							w->is_black = false;
+							x = w->parent;
+							if (x == root || !x->is_black)
+							{
+								x->is_black = true;
+								break;
+							}
+							w = tree_is_left_child(x) ? x->parent->right : x->parent->left;
+						}
+						else
+						{
+							if (w->right == nullptr || w->right->is_black)
+							{
+								w->left->is_black = true;
+								w->is_black = false;
+								tree_right_rotate(w);
+								w = w->parent;
+							}
+							w->is_black = w->parent->is_black;
+							w->parent->is_black = true;
+							w->right->is_black = true;
+							tree_left_rotate(w->parent);
+							break;
+						}
+					}
+					else
+					{
+						if (!w->is_black)
+						{
+							w->is_black = true;
+							w->parent->is_black = false;
+							tree_right_rotate(w->parent);
+							if (root == w->right)
+								root = w;
+							w = w->right->left;
+						}
+						if ((w->left == nullptr || w->left->is_black) && (w->right == nullptr || w->right->is_black))
+						{
+							w->is_black = false;
+							x = w->parent;
+							if (!x->is_black || x == root)
+							{
+								x->is_black = true;
+								break;
+							}
+							w = tree_is_left_child(x) ? x->parent->right : x->parent->left;
+						}
+						else
+						{
+							if (w->left == nullptr || w->left->is_black)
+							{
+								w->right->is_black = true;
+								w->is_black = false;
+								tree_left_rotate(w);
+								w = w->parent;
+							}
+							w->is_black = w->parent->is_black;
+							w->parent->is_black = true;
+							w->left->is_black = true;
+							tree_right_rotate(w->parent);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
 
-	template <class T, class Compare, class Alloc>
+	template <class T>
+	struct tree_node
+	{
+		T	content;
+		tree_node*	parent;
+		tree_node*	right;
+		tree_node*	left;
+
+		tree_node(const T& x = T()) : content(x), parent(nullptr), right(nullptr), left(nullptr) {}
+	};
+
+	template <class Key, class T, class Compare, class Alloc>
 	class RBTree
 	{
 	public:

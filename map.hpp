@@ -30,7 +30,7 @@ namespace ft
 	private:
 		typedef typename Alloc::rebind<value_type>::other Pair_alloc_type;
 
-		typedef RBTree<key_type, value_type, key_type, key_compare, Pair_alloc_type>	Rep_type;
+		typedef RBTree<key_type, value_type, key_compare, Pair_alloc_type>	Rep_type;
 
 		Rep_type _t;
 	public:
