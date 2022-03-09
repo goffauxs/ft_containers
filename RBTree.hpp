@@ -81,14 +81,14 @@ namespace ft
 		NodePtr y = x->right;
 		x->right = y->left;
 		if (x->right != nullptr)
-			x->right->set_parent(x);
+			x->right->parent = x;
 		y->parent = x->parent;
 		if (tree_is_left_child(x))
 			x->parent->left = y;
 		else
 			x->parent->right = y;
 		y->left = x;
-		x->set_parent(y);
+		x->parent = y;
 	}
 
 	template <class NodePtr>
@@ -97,14 +97,14 @@ namespace ft
 		NodePtr y = x->left;
 		x->left = y->right;
 		if (x->left != nullptr)
-			x->left->set_parent(x);
+			x->left->parent = x;
 		y->parent = x->parent;
 		if (tree_is_left_child(x))
 			x->parent->left = y;
 		else
 			x->parent->right = y;
 		y->right = x;
-		x->set_parent(y);
+		x->parent = y;
 	}
 
 	template <class NodePtr>
@@ -198,10 +198,10 @@ namespace ft
 			else
 				y->parent->right = y;
 			y->left = z->left;
-			y->left->set_parent(y);
+			y->left->parent = y;
 			y->right = z->right;
 			if (y->right != nullptr)
-				y->right->set_parent(y);
+				y->right->parent = y;
 			y->is_black = z->is_black;
 			if (root == z)
 				root = y;
@@ -298,12 +298,13 @@ namespace ft
 	template <class T>
 	struct tree_node
 	{
-		T	content;
+		T			content;
 		tree_node*	parent;
 		tree_node*	right;
 		tree_node*	left;
+		bool		is_black;
 
-		tree_node(const T& x = T()) : content(x), parent(nullptr), right(nullptr), left(nullptr) {}
+		tree_node(const T& x = T()) : content(x), parent(nullptr), right(nullptr), left(nullptr), is_black(false) {}
 	};
 
 	template <class Key, class T, class Compare, class Alloc>
@@ -315,5 +316,5 @@ namespace ft
 		typedef Alloc	allocator_type;
 	private:
 		typedef 
-	}
+	};
 }
