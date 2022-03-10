@@ -41,7 +41,7 @@ namespace ft
 		typedef typename Rep_type::iterator					iterator;
 		typedef typename Rep_type::const_iterator			const_iterator;
 		typedef typename Rep_type::size_type				size_type;
-		typedef typename Rep_type::difference_typ			difference_type;
+		typedef typename Rep_type::difference_type			difference_type;
 		typedef typename Rep_type::reverse_iterator			reverse_iterator;
 		typedef typename Rep_type::const_reverse_iterator	const_reverse_iterator;
 

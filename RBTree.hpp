@@ -1,10 +1,40 @@
 #pragma once
 #include <memory>
+#include "reverse_iterator.hpp"
 #include "utils.hpp"
 #include "pair.hpp"
 
 namespace ft
 {
+	template <class T, class NodePtr>
+	class tree_iter
+	{
+	public:
+		typedef bidirectional_iterator_tag	iterator_category;
+		typedef T							value_type;
+		typedef ptrdiff_t					difference_type;
+		typedef value_type&					reference;
+		typedef NodePtr						pointer;
+	private:
+		explicit tree_iter(pointer p) : _ptr(p) {}
+
+		pointer _ptr;
+	public:
+		tree_iter() : _ptr(nullptr) {}
+		tree_iter(const tree_iter& other) : _ptr(other._ptr) {}
+		
+		reference operator*() const { return this->_ptr->content; }
+		pointer operator->() const { return &this->operator*(); }
+
+		tree_iter& operator++() { this->_ptr = tree_next_iter(this->_ptr); return *this; }
+		tree_iter& operator--() { this->_ptr = tree_prev_iter(this->_ptr); return *this; }
+		tree_iter& operator++(int) { tree_iter tmp(*this); ++(*this); return tmp; }
+		tree_iter& operator--(int) { tree_iter tmp(*this); --(*this); return tmp; }
+
+		friend bool operator==(const tree_iter& lhs, const tree_iter& rhs) { return lhs._ptr == rhs._ptr; }
+		friend bool operator!=(const tree_iter& lhs, const tree_iter& rhs) { return !(lhs == rhs); }
+	};
+
 	template <class NodePtr>
 	bool tree_is_left_child(NodePtr x) { return x == x->parent->left; }
 
@@ -34,22 +64,22 @@ namespace ft
 		return x->parent;
 	}
 
-	template <class EndNodePtr, class NodePtr>
-	EndNodePtr tree_next_iter(NodePtr x)
+	template <class NodePtr>
+	NodePtr tree_next_iter(NodePtr x)
 	{
 		if (x->right != nullptr)
-			return static_cast<EndNodePtr>(tree_min(x->right));
+			return tree_min(x->right);
 		while (!tree_is_left_child(x))
 			x = x->parent;
-		return static_cast<EndNodePtr>(x->parent);
+		return x->parent;
 	}
 
-	template <class NodePtr, class EndNodePtr>
-	NodePtr tree_prev_iter(EndNodePtr x)
+	template <class NodePtr>
+	NodePtr tree_prev_iter(NodePtr x)
 	{
 		if (x->left != nullptr)
 			return tree_max(x->left);
-		NodePtr xx = static_cast<NodePtr>(x);
+		NodePtr xx = x;
 		while (tree_is_left_child(xx))
 			xx = xx->parent;
 		return xx->parent;
@@ -311,10 +341,32 @@ namespace ft
 	class RBTree
 	{
 	public:
-		typedef T		value_type;
-		typedef Compare	value_compare;
-		typedef Alloc	allocator_type;
+		typedef Key			key_type;
+		typedef T			value_type;
+		typedef Compare		value_compare;
+		typedef Alloc		allocator_type;
+		typedef ptrdiff_t	difference_type;
+		typedef size_t		size_type;
+
+		typedef tree_node<T>	node_type;
+		typedef node_type*		NodePtr;
+		
+		typedef tree_iter<value_type, NodePtr>			iterator;
+		typedef tree_iter<const value_type, NodePtr>	const_iterator;
+		typedef ft::reverse_iterator<iterator>			reverse_iterator;
+		typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 	private:
-		typedef 
+		NodePtr	_root;
+	public:
+		RBTree() : _root() {}
+		RBTree(const RBTree& other) : _root(other._root) {}
+
+		iterator insert_unique(const_iterator)
+
+		template <class InputIterator>
+		void insert_unique(InputIterator first, InputIterator last)
+		{
+
+		}
 	};
 }
