@@ -30,7 +30,7 @@ namespace ft
 	private:
 		typedef typename Alloc::rebind<value_type>::other Pair_alloc_type;
 
-		typedef RBTree<key_type, value_type, key_compare, Pair_alloc_type>	Rep_type;
+		typedef RBTree<key_type, value_type, Select1st<value_type>, key_compare, Pair_alloc_type>	Rep_type;
 
 		Rep_type _t;
 	public:
@@ -45,23 +45,13 @@ namespace ft
 		typedef typename Rep_type::reverse_iterator			reverse_iterator;
 		typedef typename Rep_type::const_reverse_iterator	const_reverse_iterator;
 
-		// Default Constructor
-		map() : _t() {}
-
 		// Parametrized Constructor
 		explicit map(const Compare& comp, const allocator_type& a = allocator_type()) : _t(comp, Pair_alloc_type(a)) {}
 
 		// Copy Constructor
 		map(const map& other) : _t(other._t) {}
 
-		// Range Constructors
-		template <typename InputIterator>
-		map(InputIterator first, InputIterator last, typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
-			: _t()
-		{
-			_t.insert_unique(first, last);
-		}
-
+		// Range Constructor
 		template <typename InputIterator>
 		map(InputIterator first, InputIterator last, const Compare& comp, const allocator_type& a = allocator_type(), typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 			: _t(comp, Pair_alloc_type(a))

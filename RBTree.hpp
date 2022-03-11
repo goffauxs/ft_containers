@@ -337,13 +337,13 @@ namespace ft
 		tree_node(const T& x = T()) : content(x), parent(nullptr), right(nullptr), left(nullptr), is_black(false) {}
 	};
 
-	template <class Key, class T, class Compare, class Alloc>
+	template <class Key, class T, class KeyOfValue, class Compare, class Alloc>
 	class RBTree
 	{
 	public:
 		typedef Key			key_type;
 		typedef T			value_type;
-		typedef Compare		value_compare;
+		typedef Compare		key_compare;
 		typedef Alloc		allocator_type;
 		typedef ptrdiff_t	difference_type;
 		typedef size_t		size_type;
@@ -355,18 +355,86 @@ namespace ft
 		typedef tree_iter<const value_type, NodePtr>	const_iterator;
 		typedef ft::reverse_iterator<iterator>			reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
-	private:
-		NodePtr	_root;
-	public:
-		RBTree() : _root() {}
-		RBTree(const RBTree& other) : _root(other._root) {}
 
-		iterator insert_unique(const_iterator)
+		typedef typename Alloc::rebind<node_type>::other	NodeAllocator;
+	private:
+		static const key_type& get_key(NodePtr x) { return KeyOfValue()(x->content); }
+
+		NodePtr create_node(const value_type& x)
+		{
+			NodePtr tmp = this->_alloc.allocate(1);
+			this->_alloc.construct(&tmp->content, x);
+			return tmp;
+		}
+
+		NodePtr clone_node(NodePtr root)
+		{
+			if (root != nullptr)
+			{
+				NodePtr curr_node = create_node(root->content);
+				curr_node->left = this->clone_node(root->left);
+				curr_node->right = this->clone_node(root->right);
+				return curr_node;
+			}
+			return nullptr;
+		}
+
+		iterator _lower_bound(NodePtr x, NodePtr y, const key_type& k)
+		{
+			while (x != nullptr)
+			{
+				if (!this->_comp(get_key(x), k))
+				{
+					y = x;
+					x = x->left;
+				}
+				else
+					x = x->right;
+			}
+			return iterator(y);
+		}
+
+		NodePtr		_root;
+		key_compare	_comp;
+		size_type	_node_count;
+		Alloc		_alloc;
+	public:
+		RBTree(const value_compare& comp, const allocator_type& a = allocator_type()) : _root(), _comp(comp), _node_count(0), _alloc(NodeAllocator(a)) {}
+		RBTree(const RBTree& other)
+			: _comp(other._comp), _alloc(other._alloc), _node_count(other._node_count)
+		{
+			this->_root = clone_node(other._root);
+		}
+
+		iterator				begin()			{ return iterator(tree_min(this->_root)); }
+		const_iterator			begin() const	{ return const_iterator(tree_min(this->_root)); }
+		iterator				end()			{ return iterator(tree_max(this->_root)); }
+		const_iterator			end() const		{ return const_iterator(tree_max(this->_root)); }
+		reverse_iterator		rbegin()		{ return reverse_iterator(this->end()); }
+		const_reverse_iterator	rbegin() const	{ return const_reverse_iterator(this->end()); }
+		reverse_iterator		rend()			{ return reverse_iterator(this->begin()); }
+		const_reverse_iterator	rend() const	{ return const_reverse_iterator(this->begin()); }
+
+		bool 		empty() const		{ return this->_node_count == 0; }
+		size_type	size() const		{ return this->_node_count; }
+		size_type	max_size() const	{ return this->_alloc.max_size(); }
 
 		template <class InputIterator>
 		void insert_unique(InputIterator first, InputIterator last)
 		{
 
 		}
+
+		iterator find(const key_type& k)
+		{
+			iterator j = this->_lower_bound(this->begin(), this->end(), k);
+			return (j == this->end() || this->_comp(k, get_key(*j))) ? this->end() : j;
+		}
+
+		// const_iterator find(const key_type& k)
+		// {
+		// 	const_iterator j = this->_lower_bound(this->begin(), this->end(), k);
+
+		// }
 	};
 }

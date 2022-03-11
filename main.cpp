@@ -5,11 +5,12 @@
 #include <stack>
 #include <map>
 #include <iostream>
+#include <set>
 
 
 int main()
 {
 	std::map<std::string, int> a;
-	
+	std::set<std::string> b;
 }
 
