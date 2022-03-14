@@ -86,26 +86,6 @@ namespace ft
 	}
 
 	template <class NodePtr>
-	NodePtr tree_leaf(NodePtr x)
-	{
-		while (true)
-		{
-			if (x->left != nullptr)
-			{
-				x = x->left;
-				continue;
-			}
-			if (x->right != nullptr)
-			{
-				x = x->right;
-				continue;
-			}
-			break;
-		}
-		return x;
-	}
-
-	template <class NodePtr>
 	void tree_left_rotate(NodePtr x)
 	{
 		NodePtr y = x->right;
@@ -358,22 +338,46 @@ namespace ft
 
 		typedef typename Alloc::rebind<node_type>::other	NodeAllocator;
 	private:
-		static const key_type& get_key(NodePtr x) { return KeyOfValue()(x->content); }
+		static const key_type& _get_key(NodePtr x) { return KeyOfValue()(x->content); }
 
-		NodePtr create_node(const value_type& x)
+		ft::pair<NodePtr, NodePtr> _get_insert_unique_pos(const key_type& k)
+		{
+			NodePtr x = this->_root;
+			NodePtr y = end()._ptr;
+			bool comp = true;
+			while (x != nullptr)
+			{
+				y = x;
+				comp = this->_comp(k, _get_key(x));
+				x = comp ? x->left : x->right;
+			}
+			iterator j = iterator(y);
+			if (comp)
+			{
+				if (j == begin())
+					return ft::make_pair(x, y);
+				else
+					--j;
+			}
+			if (this->_comp(_get_key(j._ptr), k))
+				return ft::make_pair(x, y);
+			return ft::make_pair(j._ptr, nullptr);
+		}
+
+		NodePtr _create_node(const value_type& x)
 		{
 			NodePtr tmp = this->_alloc.allocate(1);
 			this->_alloc.construct(&tmp->content, x);
 			return tmp;
 		}
 
-		NodePtr clone_node(NodePtr root)
+		NodePtr _clone_node(NodePtr root)
 		{
 			if (root != nullptr)
 			{
-				NodePtr curr_node = create_node(root->content);
-				curr_node->left = this->clone_node(root->left);
-				curr_node->right = this->clone_node(root->right);
+				NodePtr curr_node = _create_node(root->content);
+				curr_node->left = _clone_node(root->left);
+				curr_node->right = _clone_node(root->right);
 				return curr_node;
 			}
 			return nullptr;
@@ -383,7 +387,7 @@ namespace ft
 		{
 			while (x != nullptr)
 			{
-				if (!this->_comp(get_key(x), k))
+				if (!this->_comp(_get_key(x), k))
 				{
 					y = x;
 					x = x->left;
@@ -403,7 +407,7 @@ namespace ft
 		RBTree(const RBTree& other)
 			: _comp(other._comp), _alloc(other._alloc), _node_count(other._node_count)
 		{
-			this->_root = clone_node(other._root);
+			this->_root = _clone_node(other._root);
 		}
 
 		iterator				begin()			{ return iterator(tree_min(this->_root)); }
@@ -419,6 +423,16 @@ namespace ft
 		size_type	size() const		{ return this->_node_count; }
 		size_type	max_size() const	{ return this->_alloc.max_size(); }
 
+		ft::pair<iterator, bool> insert_unique(const value_type& v)
+		{
+			ft::pair<iterator, bool> res;
+			res.second = find(_get_key(v)) == this->end() ? false : true;
+			if (ret.second)
+			{
+
+			}
+		}
+
 		template <class InputIterator>
 		void insert_unique(InputIterator first, InputIterator last)
 		{
@@ -427,14 +441,14 @@ namespace ft
 
 		iterator find(const key_type& k)
 		{
-			iterator j = this->_lower_bound(this->begin(), this->end(), k);
-			return (j == this->end() || this->_comp(k, get_key(*j))) ? this->end() : j;
+			iterator j = _lower_bound(begin(), end(), k);
+			return (j == end() || this->_comp(k, _get_key(j._ptr))) ? end() : j;
 		}
 
-		// const_iterator find(const key_type& k)
-		// {
-		// 	const_iterator j = this->_lower_bound(this->begin(), this->end(), k);
-
-		// }
+		const_iterator find(const key_type& k) const
+		{
+			const_iterator j = _lower_bound(begin(), end(), k);
+			return (j == end() || this->_comp(k, _get_key(j._ptr))) ? end() : j;
+		}
 	};
 }
