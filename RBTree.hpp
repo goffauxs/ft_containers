@@ -6,33 +6,27 @@
 
 namespace ft
 {
-	template <class T, class NodePtr>
+	template <class T>
 	class tree_iter
 	{
-	public:
+		typedef T	value_type;
+		typedef T&	reference;
+		typedef T*	pointer;
+
 		typedef bidirectional_iterator_tag	iterator_category;
-		typedef T							value_type;
 		typedef ptrdiff_t					difference_type;
-		typedef value_type&					reference;
-		typedef NodePtr						pointer;
-	private:
-		explicit tree_iter(pointer p) : _ptr(p) {}
 
-		pointer _ptr;
-	public:
-		tree_iter() : _ptr(nullptr) {}
-		tree_iter(const tree_iter& other) : _ptr(other._ptr) {}
-		
-		reference operator*() const { return this->_ptr->content; }
-		pointer operator->() const { return &this->operator*(); }
+		typedef tree_iter<T>				self;
+		typedef tree_node_base::base_ptr	base_ptr;
+		typedef tree_node<T>*				link_type;
 
-		tree_iter& operator++() { this->_ptr = tree_next_iter(this->_ptr); return *this; }
-		tree_iter& operator--() { this->_ptr = tree_prev_iter(this->_ptr); return *this; }
-		tree_iter& operator++(int) { tree_iter tmp(*this); ++(*this); return tmp; }
-		tree_iter& operator--(int) { tree_iter tmp(*this); --(*this); return tmp; }
+					tree_iter() : _node() {}
+		explicit	tree_iter(base_ptr x) : _node(x) {}
 
-		friend bool operator==(const tree_iter& lhs, const tree_iter& rhs) { return lhs._ptr == rhs._ptr; }
-		friend bool operator!=(const tree_iter& lhs, const tree_iter& rhs) { return !(lhs == rhs); }
+		reference operator*() const { return *static_cast<link_type>(_node)->valptr(); }
+		pointer operator->() const { return static_cast<link_type>(_node)->valptr(); }
+
+		self& operator++() { _node = tree_}
 	};
 
 	template <class NodePtr>
@@ -305,38 +299,250 @@ namespace ft
 		}
 	}
 
-	template <class T>
-	struct tree_node
+	struct tree_node_base
 	{
-		T			content;
-		tree_node*	parent;
-		tree_node*	right;
-		tree_node*	left;
-		bool		is_black;
+		typedef tree_node_base*			base_ptr;
+		typedef const tree_node_base*	const_base_ptr;
 
+		bool		is_black;
+		base_ptr	parent;
+		base_ptr	left;
+		base_ptr	right;
+	};
+
+	template <typename Key_compare>
+	struct tree_key_compare
+	{
+		Key_compare key_compare;
+
+		tree_key_compare() : key_compare() {}
+		tree_key_compare(const Key_compare& comp) : key_compare(comp) {}
+	};
+
+	template <class T>
+	struct tree_header
+	{
+		tree_node_base	header;
+		size_t			node_count;
+
+		tree_header()
+		{
+			header.is_black = false;
+			reset();
+		}
+
+		void move_data(tree_header& from)
+		{
+			header.is_black = from.header.is_black;
+			header.parent = from.header.parent;
+			header.left = from.header.left;
+			header.right = from.header.right;
+			header.parent->parent = &header;
+			node_count = from.node_count;
+
+			from.reset();
+		}
+
+		void reset()
+		{
+			header.parent = nullptr;
+			header.left = &header;
+			header.right = &header;
+			node_count = 0;
+		}
+	};
+
+	template <class T>
+	struct tree_node : public tree_node_base
+	{
+		typedef tree_node<T>* link_type;
+
+		T value_field;
+
+				T* valptr()			{ return std::addressof(value_field); }
+		const	T* valptr() const	{ return std::addressof(value_field); }
 		tree_node(const T& x = T()) : content(x), parent(nullptr), right(nullptr), left(nullptr), is_black(false) {}
 	};
 
 	template <class Key, class T, class KeyOfValue, class Compare, class Alloc>
 	class RBTree
 	{
+		typedef typename Alloc::rebind<tree_node<T> >::other	node_allocator;
+	protected:
+		typedef tree_node_base*			base_ptr;
+		typedef const tree_node_base*	const_base_ptr;
+		typedef tree_node<T>*			link_type;
+		typedef const tree_node<T>*		const_link_type;
+	private:
+		struct reuse_or_alloc_node
+		{
+			reuse_or_alloc_node(RBTree& t)
+				: _root(t._root()), _nodes(t.rightmost()), _t(t)
+			{
+				if (_root)
+				{
+					_root->parent = nullptr;
+					if (_nodes->left)
+						_nodes = nodes->left;
+				}
+				else
+					_nodes = nullptr;
+			}
+
+			~reuse_or_alloc_node() { _t.erase(static_cast<link_type>(_root)); }
+
+			template <typename Arg>
+			link_type operator()(const Arg& arg)
+			{
+				link_type node = static_case<link_type>(extract());
+				if (node)
+				{
+					_t.destroy_node(node);
+					_t.construct_node(node, arg);
+					return node;
+				}
+				return _t.create_node(arg);
+			}
+		private:
+			base_ptr extract()
+			{
+				if (!_nodes)
+					return _nodes;
+				base_ptr node = _nodes;
+				_nodes = _nodes->parent;
+				if (_nodes)
+				{
+					if (_nodes->right == node)
+					{
+						_nodes->right = nullptr;
+						if (_nodes->left)
+						{
+							_nodes = _nodes->left;
+							while (_nodes->right)
+								_nodes = _nodes->right;
+							if (_nodes->left)
+								_nodes = _nodes->left;
+						}
+					}
+					else
+						_nodes->left = nullptr;
+				}
+				else
+					_root = nullptr;
+				return node;
+			}
+
+			base_ptr	_root;
+			base_ptr	_nodes;
+			RBTree&		_t;
+		};
+
+		struct Alloc_node
+		{
+			Alloc_node(RBTree& t) : _t(t) {}
+
+			template <typename Arg>
+			link_type operator()(const Arg& arg) const { return _t.create_node(arg); }
+		private:
+			RBTree& _t;
+		};
 	public:
-		typedef Key			key_type;
-		typedef T			value_type;
-		typedef Compare		key_compare;
+		typedef Key					key_type;
+		typedef T					value_type;
+		typedef value_type*			pointer;
+		typedef const value_type*	const_pointer;
+		typedef value_type&			reference;
+		typedef const value_type&	const_reference;
+		// typedef Compare		key_compare;
 		typedef Alloc		allocator_type;
 		typedef ptrdiff_t	difference_type;
 		typedef size_t		size_type;
 
-		typedef tree_node<T>	node_type;
-		typedef node_type*		NodePtr;
-		
-		typedef tree_iter<value_type, NodePtr>			iterator;
-		typedef tree_iter<const value_type, NodePtr>	const_iterator;
-		typedef ft::reverse_iterator<iterator>			reverse_iterator;
-		typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
+				node_allocator&	get_node_allocator()		{ return *static_cast<node_allocator*>(&this->impl); }
+		const	node_allocator&	get_node_allocator() const	{ return *static_cast<const node_allocator*>(&this->impl); }
+				allocator_type	get_allocator() const		{ return allocator_type(get_node_allocator()); }
 
-		typedef typename Alloc::rebind<node_type>::other	NodeAllocator;
+		// typedef tree_node<T>	node_type;
+		// typedef node_type*		NodePtr;
+		
+		// typedef tree_iter<value_type, NodePtr>			iterator;
+		// typedef tree_iter<const value_type, NodePtr>	const_iterator;
+		// typedef ft::reverse_iterator<iterator>			reverse_iterator;
+		// typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
+	protected:
+		link_type	get_node()				{ return get_node_allocator().allocate(1); }
+		void		put_node(link_type p)	{ get_node_allocator().deallocate(p, 1); }
+		void		construct_node(link_type node, const value_type& x)
+		{
+			try
+			{
+				get_allocator().construct(node->valptr(), x);
+			}
+			catch (const std::exception& e)
+			{
+				put_node(node);
+				std::cerr << e.what() << std::endl;
+			}
+		}
+
+		link_type create_node(const value_type& x)
+		{
+			link_type tmp = get_node();
+			construct_node(tmp, x);
+			return tmp;
+		}
+
+		void destroy_node(link_type p) { get_allocator().destroy(p->valptr()); }
+
+		void drop_node(link_type p)
+		{
+			destroy_node(p);
+			put_node(p);
+		}
+
+		template <typename NodeGen>
+		link_type clone_node(const_link_type x, NodeGen& node_gen)
+		{
+			link_type tmp = node_gen(*x->valptr());
+			tmp->is_black = x->is_black;
+			tmp->left = nullptr;
+			tmp->right = nullptr;
+			return tmp;
+		}
+	protected:
+		template <typename Key_compare>
+		struct tree_impl : public node_allocator, public tree_key_compare<Key_compare>, public tree_header
+		{
+			typedef tree_key_compare<Key_compare> base_key_compare;
+
+			tree_impl() {}
+			tree_impl(const tree_impl& x) : base_key_compare(x.key_compare) {}
+			tree_impl(const tree_impl& comp, const node_allocator& a) : node_allocator(a), base_key_compare(x.key_compare) {}
+		};
+
+		tree_impl<Compare> impl;
+	protected:
+		base_ptr&		_root()				{ return this->impl.header.parent; }
+		const_base_ptr	_root() const		{ return this->impl.header.parent; }
+		base_ptr&		_leftmost()			{ return this->impl.header.left; }
+		const_base_ptr _leftmost() const	{ return this->impl.header.left; }
+		bases_ptr&		_rightmost()		{ return this->impl.header.right; }
+		const_base_ptr _rightmost() const	{ return this->impl.header.right; }
+		link_type		_begin()			{ return static_cast<link_type>(this->impl.header.parent); }
+		const_link_type _begin() const		{ return static_cast<const_link_type>(this->impl.header.parent); }
+		base_ptr		_end()				{ return &this->impl.header; }
+		const_base_ptr	_end() const		{ return &this->impl.header; }
+		
+		static const_reference	_value(const_link_type x) { return *x->valptr(); }
+		static const Key&		_key(const_link_type x) { return KeyOfValue()(_value(x)); }
+		static link_type		_left(base_ptr x) { return static_cast<link_type>(x->left); }
+		static const_link_type	_left(const_base_ptr x) { return static_cast<const_link_type>(x->left); }
+		static link_type		_right(base_ptr x) { return static_cast<link_type>(x->right); }
+		static const_link_type	_right(const_base_ptr x) { return static_cast<const_link_type>(x->right); }
+		static const_reference	_value(const_base_ptr x) { return *static_cast<const_link_type>(x)->valptr(); }
+		static const Key&		_key(const_base_ptr x) { return KeyOfValue()(_value(x)); }
+	public:
+		typedef tree_iter<
 	private:
 		static const key_type& _get_key(NodePtr x) { return KeyOfValue()(x->content); }
 
@@ -403,7 +609,7 @@ namespace ft
 		size_type	_node_count;
 		Alloc		_alloc;
 	public:
-		RBTree(const value_compare& comp, const allocator_type& a = allocator_type()) : _root(), _comp(comp), _node_count(0), _alloc(NodeAllocator(a)) {}
+		RBTree(const value_compare& comp, const allocator_type& a = allocator_type()) : _root(), _comp(comp), _node_count(0), _alloc(node_allocator(a)) {}
 		RBTree(const RBTree& other)
 			: _comp(other._comp), _alloc(other._alloc), _node_count(other._node_count)
 		{
