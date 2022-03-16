@@ -119,7 +119,7 @@ namespace ft
 					_nodes = nullptr;
 			}
 
-			~reuse_or_alloc_node() { _t.erase(static_cast<link_type>(_root)); }
+			~reuse_or_alloc_node() { _t._erase(static_cast<link_type>(_root)); }
 
 			template <typename Arg>
 			link_type operator()(const Arg& arg)
@@ -183,7 +183,6 @@ namespace ft
 		typedef const value_type*	const_pointer;
 		typedef value_type&			reference;
 		typedef const value_type&	const_reference;
-		// typedef Compare		key_compare;
 		typedef Alloc		allocator_type;
 		typedef ptrdiff_t	difference_type;
 		typedef size_t		size_type;
@@ -191,14 +190,6 @@ namespace ft
 				node_allocator&	get_node_allocator()		{ return *static_cast<node_allocator*>(&this->impl); }
 		const	node_allocator&	get_node_allocator() const	{ return *static_cast<const node_allocator*>(&this->impl); }
 				allocator_type	get_allocator() const		{ return allocator_type(get_node_allocator()); }
-
-		// typedef tree_node<T>	node_type;
-		// typedef node_type*		NodePtr;
-		
-		// typedef tree_iter<value_type, NodePtr>			iterator;
-		// typedef tree_iter<const value_type, NodePtr>	const_iterator;
-		// typedef ft::reverse_iterator<iterator>			reverse_iterator;
-		// typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 	protected:
 		link_type	get_node()				{ return get_node_allocator().allocate(1); }
 		void		put_node(link_type p)	{ get_node_allocator().deallocate(p, 1); }
@@ -280,7 +271,7 @@ namespace ft
 
 		ft::pair<base_ptr, base_ptr> get_insert_unique_pos(const key_type& k)
 		{
-			typedef ft::pair<base_ptr, base_ptr> res;
+			typedef ft::pair<base_ptr, base_ptr> cast;
 			link_type x = _begin();
 			base_ptr y = _end();
 			bool comp = true;
@@ -294,18 +285,18 @@ namespace ft
 			if (comp)
 			{
 				if (j == begin())
-					return res(x, y);
+					return cast(x, y);
 				else
 					--j;
 			}
 			if (impl.key_compare(_key(j._node), k))
-				return res(x, y);
-			return res(j._node, nullptr);
+				return cast(x, y);
+			return cast(j._node, nullptr);
 		}
 
 		ft::pair<base_ptr, base_ptr> get_insert_equal_pos(const key_type& k)
 		{
-			typedef ft::pair<base_ptr, base_ptr> res;
+			typedef ft::pair<base_ptr, base_ptr> cast;
 			link_type x = _begin();
 			base_ptr y = _end();
 			while (x != nullptr)
@@ -313,7 +304,97 @@ namespace ft
 				y = x;
 				x = impl.key_compare(k, _key(x)) ? _left(x) : _right(x);
 			}
-			return res(x, y);
+			return cast(x, y);
+		}
+
+		ft::pair<base_ptr, base_ptr> get_insert_hint_unique_pos(const_iterator position, const key_type& k)
+		{
+			iterator pos = position._const_cast();
+			typedef ft::pair<base_ptr, base_ptr> cast;
+
+			if (pos._node == _end())
+			{
+				if (size() > 0 && impl.key_compare(_key(_rightmost()), k))
+					return cast(nullptr, _rightmost());
+				else
+					return get_insert_unique_pos(k);
+			}
+			else if (impl.key_compare(k, _key(pos._node)))
+			{
+				iterator before = pos;
+				if (pos._node == _leftmost())
+					return cast(_leftmost(), _leftmost());
+				else if (impl.key_compare(_key((--before)._node), k))
+				{
+					if (_right(before._node) == nullptr)
+						return cast(nullptr, before._node);
+					else
+						return cast(pos._node, pos._node)
+				}
+				else
+					get_insert_unique_pos(k);
+			}
+			else if (impl.key_compare(_key(pos._node), k))
+			{
+				iterator after = pos;
+				if (pos._node == _rightmost())
+					return cast(nullptr, _rightmost());
+				else if (impl.key_compare(k, _key((++after)._node)))
+				{
+					if (_right(pos._node) == nullptr)
+						return cast(nullptr, pos._node);
+					else
+						return cast(after._node, after._node);
+				}
+				else
+					return get_insert_unique_pos(k);
+			}
+			else
+				return cast(pos._node, nullptr);
+		}
+
+		ft::pair<base_ptr, base_ptr> get_insert_hint_equal_pos(const_iterator position, const key_type& k)
+		{
+			iterator pos = position._const_cast();
+			typedef ft::pair<base_ptr, base_ptr> cast;
+
+			if (pos._node == _end())
+			{
+				if (size() > 0 && !impl.key_compare(k, _key(_rightmost())))
+					return cast(nullptr, _rightmost());
+				else
+					return get_insert_equal_pos(k);
+			}
+			else if (!impl.key_compare(_key(pos._node), k))
+			{
+				iterator before = pos;
+				if (pos._node == _leftmost())
+					return cast(_leftmost(), _leftmost());
+				else if (!impl.key_compare(k, _key((--before)._node)))
+				{
+					if (_right(before._node) == nullptr)
+						return cast(nullptr, before._node);
+					else
+						return cast(pos._node, pos._node);
+				}
+				else
+					return get_insert_equal_pos(k);
+			}
+			else
+			{
+				iterator after = pos;
+				if (pos._node == _rightmost())
+					return cast(nullptr, _rightmost());
+				else if (!impl.key_compare(_key((++after)._node), k))
+				{
+					if (_right(pos._node) == nullptr)
+						return cast(nullptr, pos._node);
+					else
+						return cast(after._node, after._node);
+				}
+				else
+					return cast(nullptr, nullptr);
+			}
 		}
 	private:
 		// Modifiers
@@ -376,7 +457,7 @@ namespace ft
 			}
 			catch (const std::exception& e)
 			{
-				erase(top);
+				_erase(top);
 				std::cerr << e.what() << std::endl;
 			}
 			return top;
@@ -398,18 +479,18 @@ namespace ft
 			return copy(x, an);
 		}
 
-		void erase(link_type x)
+		void _erase(link_type x)
 		{
 			while (x != nullptr)
 			{
-				erase(_right(x));
+				_erase(_right(x));
 				link_type y = _left(x);
 				drop_node(x);
 				x = y;
 			}
 		}
 
-		iterator lower_bound(link_type x, base_ptr y, const Key& k)
+		iterator _lower_bound(link_type x, base_ptr y, const Key& k)
 		{
 			while (x != nullptr)
 			{
@@ -424,7 +505,7 @@ namespace ft
 			return iterator(y);
 		}
 
-		const_iterator lower_bound(const_link_type x, const_base_ptr y, const Key& k)
+		const_iterator _lower_bound(const_link_type x, const_base_ptr y, const Key& k)
 		{
 			while (x != nullptr)
 			{
@@ -439,7 +520,7 @@ namespace ft
 			return const_iterator(y);
 		}
 
-		iterator upper_bound(link_type x, base_ptr y, const Key& k)
+		iterator _upper_bound(link_type x, base_ptr y, const Key& k)
 		{
 			while (x != nullptr)
 			{
@@ -454,7 +535,7 @@ namespace ft
 			return iterator(y);
 		}
 
-		const_iterator upper_bound(const_link_type x, const_base_ptr y, const Key& k)
+		const_iterator _upper_bound(const_link_type x, const_base_ptr y, const Key& k)
 		{
 			while (x != nullptr)
 			{
@@ -477,7 +558,7 @@ namespace ft
 			if (x._root() != nullptr)
 				_root() = copy(other);
 		}
-		~RBTree() { erase(_begin()); }
+		~RBTree() { _erase(_begin()); }
 
 		RBTree& operator=(const RBTree& rhs)
 		{
@@ -548,7 +629,172 @@ namespace ft
 			Alloc_node an(*this);
 			return insert(res.first, res.second, v, an);
 		}
+
+		template <typename node_gen>
+		iterator insert_unique(const_iterator pos, const value_type& v, node_gen&)
+		{
+			ft::pair<base_ptr, base_ptr> res = get_insert_hint_unique_pos(pos, KeyOfValue()(v));
+
+			if (res.second)
+				return insert(res.first, res.second, v, node_gen);
+			return iterator(res.first);
+		}
+
+		iterator insert_unique(const_iterator pos, const value_type& v)
+		{
+			Alloc_node an(*this);
+			return insert_unique(pos, v, an);
+		}
+
+		template <typename node_gen>
+		iterator insert_equal(const_iterator pos, const value_type& v, node_gen&)
+		{
+			ft::pair<base_ptr, base_ptr> res = get_insert_hint_equal_pos(pos, KeyOfValue()(v));
+
+			if (res.second)
+				return insert(res.first, res.second, v, node_gen);
+			return insert_equal_lower(v);
+		}
+
+		iterator insert_equal(const_iterator pos, const value_type& v)
+		{
+			Alloc_node an(*this);
+			return insert_equal(pos, v, an);
+		}
+
+		template <typename InputIterator>
+		void insert_unique(InputIterator first, InputIterator last)
+		{
+			Alloc_node an(*this);
+			for (; first != last; first++)
+				insert_unique(end(), *first, an);
+		}
+
+		template <typename InputIterator>
+		void insert_equal(InputIterator first, InputIterator last)
+		{
+			Alloc_node an(*this);
+			for (; first != last; first++)
+				insert_equal(end(), *first, an);
+		}
+	private:
+		void erase_aux(const_iterator position)
+		{
+			link_type node = static_cast<link_type>(tree_rebalance_for_erase(const_cast<base_ptr>(position._node), this->impl.header));
+
+			drop_node(node);
+			--impl.node_count;
+		}
+
+		void erase_aux(const_iterator first, const_iterator last)
+		{
+			if (first == begin() && last == end())
+				clear();
+			else
+			{
+				while (first != last)
+					erase_aux(first++);
+			}
+		}
+	public:
+		void erase(iterator position) { if (position != end()) erase_aux(position); }
+		void erase(const_iterator position) { if (position != end()) erase_aux(position); }
+
+		size_type erase(const key_type& k)
+		{
+			ft::pair<iterator, iterator> p = equal_range(x);
+			const size_type old_size = size();
+			erase_aux(p.first, p.second);
+			return old_size - size();
+		}
+
+		void erase(iterator first, iterator last) { erase_aux(first, last); }
+		void erase(const_iterator first, const_iterator last) { erase_aux(first, last); }
+
+		void erase(const key_type* first, const key_type* last)
+		{
+			while (first != last)
+				erase_aux(*first++);
+		}
+
+		void clear()
+		{
+			_erase(_begin());
+			impl.reset();
+		}
+
+		iterator find(const key_type& k)
+		{
+			iterator j = _lower_bound(_begin(), _end(), k);
+			return (j == end() || impl.key_compare(k, _key(j._node))) ? end() : j;
+		}
+
+		const_iterator find(const key_type& k) const
+		{
+			const_iterator j = _lower_bound(_begin(), _end(), k);
+			return (j == end() || impl.key_compare(k, _key(j._node))) ? end() : j;
+		}
+
+		size_type count(const key_type& k) const
+		{
+			ft::pair<const_iterator, const_iterator> p = equal_range(k);
+			const size_type n = ft::distance(p.first, p.second);
+			return n;
+		}
+
+		iterator		lower_bound(const key_type& k)			{ return _lower_bound(_begin(), _end(), k); }
+		const_iterator	lower_bound(const key_type& k) const	{ return _lower_bound(_begin(), _end(), k); }
+		iterator		upper_bound(const key_type& k)			{ return _upper_bound(_begin(), _end(), k); }
+		const_iterator	upper_bound(const key_type& k) const	{ return _upper_bound(_begin(), _end(), k); }
 	};
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	bool operator==(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
+	}
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	bool operator<(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+	}
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	bool operator!=(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		return !(lhs == rhs);
+	}
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	bool operator>(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		return rhs < lhs;
+	}
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	bool operator<=(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		return !(rhs < lhs);
+	}
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	bool operator>=(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		return !(lhs < rhs);
+	}
+
+	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	void swap(const RBTree<Key, T, KeyOfValue, Compare, Alloc>& lhs, const RBTree<Key, T, KeyOfValue, Compare, Alloc>& rhs)
+	{
+		lhs.swap(rhs);
+	}
+
+	// template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
+	// RBTreeRBTree<Key, T, KeyOfValue, Compare, Alloc>& operator=(const RBTree& )
+	// {
+		
+	// }
 }
 
 
