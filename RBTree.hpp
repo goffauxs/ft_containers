@@ -52,9 +52,9 @@ namespace ft
 	template <class T>
 	struct const_tree_iter
 	{
-		typedef T	value_type;
-		typedef T&	reference;
-		typedef T*	pointer;
+		typedef T			value_type;
+		typedef const T&	reference;
+		typedef const T*	pointer;
 
 		typedef tree_iter<T>	iterator;
 
@@ -97,7 +97,7 @@ namespace ft
 	template <class Key, class T, class KeyOfValue, class Compare, class Alloc>
 	class RBTree
 	{
-		typedef typename Alloc::rebind<tree_node<T> >::other	node_allocator;
+		typedef typename Alloc::template rebind<tree_node<T> >::other	node_allocator;
 	protected:
 		typedef tree_node_base*			base_ptr;
 		typedef const tree_node_base*	const_base_ptr;
@@ -107,13 +107,13 @@ namespace ft
 		struct reuse_or_alloc_node
 		{
 			reuse_or_alloc_node(RBTree& t)
-				: _root(t._root()), _nodes(t.rightmost()), _t(t)
+				: _root(t._root()), _nodes(t._rightmost()), _t(t)
 			{
 				if (_root)
 				{
 					_root->parent = nullptr;
 					if (_nodes->left)
-						_nodes = nodes->left;
+						_nodes = _nodes->left;
 				}
 				else
 					_nodes = nullptr;
@@ -124,7 +124,7 @@ namespace ft
 			template <typename Arg>
 			link_type operator()(const Arg& arg)
 			{
-				link_type node = static_case<link_type>(extract());
+				link_type node = static_cast<link_type>(extract());
 				if (node)
 				{
 					_t.destroy_node(node);
@@ -236,9 +236,9 @@ namespace ft
 		{
 			typedef tree_key_compare<Key_compare> base_key_compare;
 
-			tree_impl() {}
-			tree_impl(const tree_impl& x) : base_key_compare(x.key_compare) {}
-			tree_impl(const tree_impl& comp, const node_allocator& a) : node_allocator(a), base_key_compare(x.key_compare) {}
+			tree_impl() : node_allocator() {}
+			tree_impl(const tree_impl& other) : node_allocator(other), base_key_compare(other.key_compare) {}
+			tree_impl(const Key_compare& comp, const node_allocator& a) : node_allocator(a), base_key_compare(comp) {}
 		};
 
 		tree_impl<Compare> impl;
@@ -246,9 +246,9 @@ namespace ft
 		base_ptr&		_root()				{ return this->impl.header.parent; }
 		const_base_ptr	_root() const		{ return this->impl.header.parent; }
 		base_ptr&		_leftmost()			{ return this->impl.header.left; }
-		const_base_ptr _leftmost() const	{ return this->impl.header.left; }
-		bases_ptr&		_rightmost()		{ return this->impl.header.right; }
-		const_base_ptr _rightmost() const	{ return this->impl.header.right; }
+		const_base_ptr	_leftmost() const	{ return this->impl.header.left; }
+		base_ptr&		_rightmost()		{ return this->impl.header.right; }
+		const_base_ptr	_rightmost() const	{ return this->impl.header.right; }
 		link_type		_begin()			{ return static_cast<link_type>(this->impl.header.parent); }
 		const_link_type _begin() const		{ return static_cast<const_link_type>(this->impl.header.parent); }
 		base_ptr		_end()				{ return &this->impl.header; }
@@ -329,10 +329,10 @@ namespace ft
 					if (_right(before._node) == nullptr)
 						return cast(nullptr, before._node);
 					else
-						return cast(pos._node, pos._node)
+						return cast(pos._node, pos._node);
 				}
 				else
-					get_insert_unique_pos(k);
+					return get_insert_unique_pos(k);
 			}
 			else if (impl.key_compare(_key(pos._node), k))
 			{
@@ -399,17 +399,17 @@ namespace ft
 	private:
 		// Modifiers
 		template <typename node_gen>
-		iterator insert(base_ptr x, base_ptr p, const value_type& v, node_gen&)
+		iterator insert(base_ptr x, base_ptr p, const value_type& v, node_gen& gen)
 		{
 			bool insert_left = (x != nullptr || p == _end() || impl.key_compare(KeyOfValue()(v), _key(p)));
-			link_type z = node_gen(v);
+			link_type z = gen(v);
 
 			tree_insert_and_rebalance(insert_left, z, p, this->impl.header);
 			++impl.node_count;
 			return iterator(z);
 		}
 
-		iterator insert_lower(base_ptr y, const value_type& v)
+		iterator insert_lower(base_ptr p, const value_type& v)
 		{
 			bool insert_left = (p == _end() || !impl.key_compare(_key(p), KeyOfValue()(v)));
 			link_type z = create_node(v);
@@ -432,25 +432,25 @@ namespace ft
 		}
 
 		template <typename node_gen>
-		link_type copy(const_link_type x, base_ptr p, node_gen&)
+		link_type copy(const_link_type x, base_ptr p, node_gen& gen)
 		{
-			link_type top = clone_node(x, node_gen);
+			link_type top = clone_node(x, gen);
 			top->parent = p;
 
 			try
 			{
-				if (x->right)
-					top->right = copy(_right(x), top, node_gen);
+				if (x->right) 
+					top->right = copy(_right(x), top, gen);
 				p = top;
 				x = _left(x);
 
 				while (x != nullptr)
 				{
-					link_type y = clone_node(x, node_gen);
+					link_type y = clone_node(x, gen);
 					p->left = y;
 					y->parent = p;
 					if (x->right)
-						y->right = copy(_right(x), y, node_gen);
+						y->right = copy(_right(x), y, gen);
 					p = y;
 					x = _left(x);
 				}
@@ -467,8 +467,8 @@ namespace ft
 		link_type copy(const RBTree& x, node_gen& gen)
 		{
 			link_type root = copy(x._begin(), _end(), gen);
-			_leftmost() = _min(root);
-			_rightmost() = _max(root);
+			_leftmost() = tree_node_base::_min(root);
+			_rightmost() = tree_node_base::_max(root);
 			impl.node_count = x.impl.node_count;
 			return root;
 		}
@@ -494,7 +494,7 @@ namespace ft
 		{
 			while (x != nullptr)
 			{
-				if (!impl.key_compare(_key(x, k)))
+				if (!impl.key_compare(_key(x), k))
 				{
 					y = x;
 					x = _left(x);
@@ -505,7 +505,7 @@ namespace ft
 			return iterator(y);
 		}
 
-		const_iterator _lower_bound(const_link_type x, const_base_ptr y, const Key& k)
+		const_iterator _lower_bound(const_link_type x, const_base_ptr y, const Key& k) const
 		{
 			while (x != nullptr)
 			{
@@ -535,7 +535,7 @@ namespace ft
 			return iterator(y);
 		}
 
-		const_iterator _upper_bound(const_link_type x, const_base_ptr y, const Key& k)
+		const_iterator _upper_bound(const_link_type x, const_base_ptr y, const Key& k) const
 		{
 			while (x != nullptr)
 			{
@@ -555,7 +555,7 @@ namespace ft
 		RBTree(const RBTree& other)
 			: impl(other.impl)
 		{
-			if (x._root() != nullptr)
+			if (other._root() != nullptr)
 				_root() = copy(other);
 		}
 		~RBTree() { _erase(_begin()); }
@@ -573,7 +573,8 @@ namespace ft
 			return *this;
 		}
 
-		Compare key_comp() const { return impl.key_compare; }
+		Compare	key_comp() const { return impl.key_compare; }
+
 		iterator				begin()			{ return iterator(this->impl.header.left); }
 		const_iterator			begin() const	{ return const_iterator(this->impl.header.left); }
 		iterator				end()			{ return iterator(&this->impl.header); }
@@ -631,12 +632,12 @@ namespace ft
 		}
 
 		template <typename node_gen>
-		iterator insert_unique(const_iterator pos, const value_type& v, node_gen&)
+		iterator insert_unique(const_iterator pos, const value_type& v, node_gen& gen)
 		{
 			ft::pair<base_ptr, base_ptr> res = get_insert_hint_unique_pos(pos, KeyOfValue()(v));
 
 			if (res.second)
-				return insert(res.first, res.second, v, node_gen);
+				return insert(res.first, res.second, v, gen);
 			return iterator(res.first);
 		}
 
@@ -647,12 +648,12 @@ namespace ft
 		}
 
 		template <typename node_gen>
-		iterator insert_equal(const_iterator pos, const value_type& v, node_gen&)
+		iterator insert_equal(const_iterator pos, const value_type& v, node_gen& gen)
 		{
 			ft::pair<base_ptr, base_ptr> res = get_insert_hint_equal_pos(pos, KeyOfValue()(v));
 
 			if (res.second)
-				return insert(res.first, res.second, v, node_gen);
+				return insert(res.first, res.second, v, gen);
 			return insert_equal_lower(v);
 		}
 
@@ -702,7 +703,7 @@ namespace ft
 
 		size_type erase(const key_type& k)
 		{
-			ft::pair<iterator, iterator> p = equal_range(x);
+			ft::pair<iterator, iterator> p = equal_range(k);
 			const size_type old_size = size();
 			erase_aux(p.first, p.second);
 			return old_size - size();
@@ -746,6 +747,58 @@ namespace ft
 		const_iterator	lower_bound(const key_type& k) const	{ return _lower_bound(_begin(), _end(), k); }
 		iterator		upper_bound(const key_type& k)			{ return _upper_bound(_begin(), _end(), k); }
 		const_iterator	upper_bound(const key_type& k) const	{ return _upper_bound(_begin(), _end(), k); }
+
+		ft::pair<iterator, iterator> equal_range(const key_type& k)
+		{
+			link_type x = _begin();
+			base_ptr y = _end();
+			while (x != nullptr)
+			{
+				if (impl.key_compare(_key(x), k))
+					x = _right(x);
+				else if (impl.key_compare(k, _key(x)))
+				{
+					y = x;
+					x = _left(x);
+				}
+				else
+				{
+					link_type xx(x);
+					base_ptr yy(y);
+					y = x;
+					x = _left(x);
+					xx = _right(xx);
+					return ft::pair<iterator, iterator>(_lower_bound(x, y, k), _upper_bound(xx, yy, k));
+				}
+			}
+			return ft::pair<iterator, iterator>(iterator(y), iterator(y));
+		}
+
+		ft::pair<const_iterator, const_iterator> equal_range(const key_type& k) const
+		{
+			const_link_type x = _begin();
+			const_base_ptr y = _end();
+			while (x != nullptr)
+			{
+				if (impl.key_compare(_key(x), k))
+					x = _right(x);
+				else if (impl.key_compare(k, _key(x)))
+				{
+					y = x;
+					x = _left(x);
+				}
+				else
+				{
+					const_link_type xx(x);
+					const_base_ptr yy(y);
+					y = x;
+					x = _left(x);
+					xx = _right(xx);
+					return ft::pair<const_iterator, const_iterator>(_lower_bound(x, y, k), _upper_bound(xx, yy, k));
+				}
+			}
+			return ft::pair<const_iterator, const_iterator>(const_iterator(y), const_iterator(y));
+		}
 	};
 
 	template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
@@ -789,12 +842,6 @@ namespace ft
 	{
 		lhs.swap(rhs);
 	}
-
-	// template <typename Key, typename T, typename KeyOfValue, typename Compare, typename Alloc>
-	// RBTreeRBTree<Key, T, KeyOfValue, Compare, Alloc>& operator=(const RBTree& )
-	// {
-		
-	// }
 }
 
 

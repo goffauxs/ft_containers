@@ -46,10 +46,6 @@ namespace ft
 	struct is_integral<long> : public true_type {};
 	template <>
 	struct is_integral<unsigned long> : public true_type {};
-	template <>
-	struct is_integral<long long> : public true_type {};
-	template <>
-	struct is_integral<unsigned long long> : public true_type {};
 
 	template <bool, typename T = void>
 	struct enable_if {};

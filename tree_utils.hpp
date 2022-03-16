@@ -1,6 +1,8 @@
 #ifndef TREE_UTILS_H
 # define TREE_UTILS_H
 
+#include <iostream>
+
 namespace ft
 {
 	struct tree_node_base
@@ -47,7 +49,6 @@ namespace ft
 		tree_key_compare(const Key_compare& comp) : key_compare(comp) {}
 	};
 
-	template <class T>
 	struct tree_header
 	{
 		tree_node_base	header;
@@ -89,7 +90,6 @@ namespace ft
 
 				T* valptr()			{ return std::addressof(value_field); }
 		const	T* valptr() const	{ return std::addressof(value_field); }
-		tree_node(const T& x = T()) : content(x), parent(nullptr), right(nullptr), left(nullptr), is_black(false) {}
 	};
 
 	static tree_node_base* ft_tree_increment(tree_node_base* x)
