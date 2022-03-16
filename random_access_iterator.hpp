@@ -1,4 +1,6 @@
-#include "iterator_traits.hpp"
+#ifndef RANDOM_ACCESS_ITERATOR_H
+# define RANDOM_ACCESS_ITERATOR_H
+# include "iterator_traits.hpp"
 
 namespace ft
 {
@@ -92,3 +94,6 @@ namespace ft
 		return lhs.base() - rhs.base();
 	}
 };
+
+
+#endif /* RANDOM_ACCESS_ITERATOR_H */

@@ -1,6 +1,7 @@
-#pragma once
-#include "type_traits.hpp"
-#include "iterator_traits.hpp"
+#ifndef UTILS_H
+# define UTILS_H
+# include "type_traits.hpp"
+# include "iterator_traits.hpp"
 
 namespace ft
 {
@@ -124,3 +125,6 @@ namespace ft
 		const typename Pair::first_type& operator()(const Pair& x) const { return x.first; }
 	};
 }
+
+
+#endif /* UTILS_H */

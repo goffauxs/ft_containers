@@ -1,5 +1,6 @@
-#pragma once
-#include "RBTree.hpp"
+#ifndef TREE_UTILS_H
+# define TREE_UTILS_H
+# include "RBTree.hpp"
 
 namespace ft
 {
@@ -417,3 +418,6 @@ namespace ft
 		return y;
 	}
 }
+
+
+#endif /* TREE_UTILS_H */

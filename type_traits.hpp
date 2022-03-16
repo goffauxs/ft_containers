@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TYPE_TRAITS_H
+# define TYPE_TRAITS_H
 
 namespace ft
 {
@@ -56,3 +57,6 @@ namespace ft
 	template <typename T>
 	struct enable_if<true, T> { typedef T type; };
 }
+
+
+#endif /* TYPE_TRAITS_H */

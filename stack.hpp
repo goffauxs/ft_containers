@@ -1,5 +1,6 @@
-#pragma once
-#include "vector.hpp"
+#ifndef STACK_H
+# define STACK_H
+# include "vector.hpp"
 
 namespace ft
 {
@@ -53,3 +54,6 @@ namespace ft
 	template <class T, class Container>
 	bool operator>=(const stack<T, Container>& lhs, const stack<T, Container>& rhs) { return !(lhs < rhs); }
 }
+
+
+#endif /* STACK_H */

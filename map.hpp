@@ -1,8 +1,9 @@
-#pragma once
-#include <functional>
-#include <memory>
-#include "pair.hpp"
-#include "RBTree.hpp"
+#ifndef MAP_H
+# define MAP_H
+# include <functional>
+# include <memory>
+# include "pair.hpp"
+# include "RBTree.hpp"
 
 namespace ft
 {
@@ -168,3 +169,6 @@ namespace ft
 	template <typename Key, typename T, typename Compare, typename Alloc>
 	void swap(map<Key, T, Compare, Alloc>& x, map<Key, T, Compare, Alloc>& y) { x.swap(y); }
 }
+
+
+#endif /* MAP_H */

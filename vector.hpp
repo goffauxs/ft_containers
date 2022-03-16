@@ -1,10 +1,11 @@
-#pragma once
-#include "random_access_iterator.hpp"
-#include "reverse_iterator.hpp"
-#include "type_traits.hpp"
-#include "utils.hpp"
-#include <memory>
-#include <iostream>
+#ifndef VECTOR_H
+# define VECTOR_H
+# include "random_access_iterator.hpp"
+# include "reverse_iterator.hpp"
+# include "type_traits.hpp"
+# include "utils.hpp"
+# include <memory>
+# include <iostream>
 
 namespace ft
 {
@@ -419,17 +420,6 @@ namespace ft
 
 		iterator erase(iterator first, iterator last)
 		{
-			// iterator tmp = first;
-			// for (; tmp != last; tmp++) this->_alloc.destroy(tmp.base());
-			// tmp = first;
-			// difference_type n = 0;
-			// for (; tmp != last && last != this->end(); tmp++, last++, n++)
-			// {
-			// 	*tmp = *last;
-			// 	this->_alloc.destroy(last.base());
-			// }
-			// this->_finish -= n;
-			// return first;
 			pointer p = this->_start + (first - this->begin());
 			if (first != last)
 				this->destruct_at_end(this->move(p + (last - first), this->_finish, p));
@@ -439,15 +429,9 @@ namespace ft
 		// swap
 		void swap(vector& other)
 		{
-			pointer tmp = this->_start;
-			this->_start = other._start;
-			other._start = tmp;
-			tmp = this->_finish;
-			this->_finish = other._finish;
-			other._finish = tmp;
-			tmp = this->_end_of_storage;
-			this->_end_of_storage = other._end_of_storage;
-			other._end_of_storage = tmp;
+			std::swap(_start, other._start);
+			std::swap(_finish, other._finish);
+			std::swap(_end_of_storage, other._end_of_storage);
 		}
 
 		// clear
@@ -496,3 +480,5 @@ namespace ft
 	template <class T, class Alloc>
 	void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) { x.swap(y); }
 }
+
+#endif /* VECTOR_H */

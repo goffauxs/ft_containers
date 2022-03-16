@@ -1,5 +1,6 @@
-#pragma once
-#include <cstddef>
+#ifndef ITERATOR_TRAITS_H
+# define ITERATOR_TRAITS_H
+# include <cstddef>
 
 namespace ft
 {
@@ -53,3 +54,6 @@ namespace ft
 		typedef Reference	reference;
 	};
 }
+
+
+#endif /* ITERATOR_TRAITS_H */

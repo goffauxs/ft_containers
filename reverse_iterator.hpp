@@ -1,4 +1,6 @@
-#include "iterator_traits.hpp"
+#ifndef REVERSE_ITERATOR_H
+# define REVERSE_ITERATOR_H
+# include "iterator_traits.hpp"
 
 namespace ft
 {
@@ -93,3 +95,6 @@ namespace ft
 		return rhs.base() - lhs.base();
 	}
 }
+
+
+#endif /* REVERSE_ITERATOR_H */
