@@ -94,7 +94,7 @@ namespace ft
 	template <class NodePtr>
 	bool tree_is_left_child(NodePtr x) { return x == x->parent->left; }
 
-	template <class Key, class T, class KeyOfValue, class Compare, class Alloc>
+	template <class Key, class T, class KeyOfValue, class Compare, class Alloc = std::allocator<T> >
 	class RBTree
 	{
 		typedef typename Alloc::template rebind<tree_node<T> >::other	node_allocator;
@@ -524,7 +524,7 @@ namespace ft
 		{
 			while (x != nullptr)
 			{
-				if (impl.key_compare(_key(x), k))
+				if (impl.key_compare(k, _key(x)))
 				{
 					y = x;
 					x = _left(x);
@@ -539,7 +539,7 @@ namespace ft
 		{
 			while (x != nullptr)
 			{
-				if (impl.key_compare(_key(x), k))
+				if (impl.key_compare(k, _key(x)))
 				{
 					y = x;
 					x = _left(x);
@@ -698,8 +698,8 @@ namespace ft
 			}
 		}
 	public:
-		void erase(iterator position) { if (position != end()) erase_aux(position); }
-		void erase(const_iterator position) { if (position != end()) erase_aux(position); }
+		void erase(iterator position) { erase_aux(position); }
+		void erase(const_iterator position) { erase_aux(position); }
 
 		size_type erase(const key_type& k)
 		{
@@ -715,7 +715,7 @@ namespace ft
 		void erase(const key_type* first, const key_type* last)
 		{
 			while (first != last)
-				erase_aux(*first++);
+				erase(*first++);
 		}
 
 		void clear()

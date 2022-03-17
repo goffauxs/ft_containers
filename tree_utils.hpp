@@ -184,7 +184,7 @@ namespace ft
 
 	void tree_insert_and_rebalance(const bool insert_left, tree_node_base* x, tree_node_base* p, tree_node_base& header)
 	{
-		tree_node_base*& root = header.parent;
+		tree_node_base *& root = header.parent;
 
 		// Insert
 		x->parent = p;
@@ -218,11 +218,11 @@ namespace ft
 
 			if (x->parent == gp->left)
 			{
-				tree_node_base* const y = gp->right;
-				if (y && !y->is_black)
+				tree_node_base* const u = gp->right;
+				if (u != nullptr && !u->is_black)
 				{
 					x->parent->is_black = true;
-					y->is_black = true;
+					u->is_black = true;
 					gp->is_black = false;
 					x = gp;
 				}
@@ -257,7 +257,7 @@ namespace ft
 					}
 					x->parent->is_black = true;
 					gp->is_black = false;
-					ft_tree_rotate_right(gp, root);
+					ft_tree_rotate_left(gp, root);
 				}
 			}
 		}
@@ -372,7 +372,7 @@ namespace ft
 						}
 						w->is_black = x_parent->is_black;
 						x_parent->is_black = true;
-						if (x->right)
+						if (w->right)
 							w->right->is_black = true;
 						ft_tree_rotate_left(x_parent, root);
 						break;
@@ -396,7 +396,7 @@ namespace ft
 					}
 					else
 					{
-						if (w->left == 0 || w->left->is_black)
+						if (w->left == nullptr || w->left->is_black)
 						{
 							w->right->is_black = true;
 							w->is_black = false;
