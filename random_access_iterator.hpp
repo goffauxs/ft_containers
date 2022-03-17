@@ -93,7 +93,7 @@ namespace ft
 	{
 		return lhs.base() - rhs.base();
 	}
-};
+}
 
 
 #endif /* RANDOM_ACCESS_ITERATOR_H */

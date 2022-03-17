@@ -56,17 +56,11 @@ namespace ft
 		allocator_type get_allocator() const { return allocator_type(this->_t.get_allocator()); }
 
 		//iterators
-		iterator		begin()			{ return this->_t.begin(); }
-		const_iterator	begin() const	{ return this->_t.begin(); }
+		iterator	begin()	const	{ return this->_t.begin(); }
+		iterator	end() const		{ return this->_t.end(); }
 
-		iterator		end() 			{ return this->_t.end(); }
-		const_iterator	end() const		{ return this->_t.end(); }
-
-		reverse_iterator		rbegin() 		{ return this->_t.rbegin(); }
-		const_reverse_iterator	rbegin() const	{ return this->_t.rbegin(); }
-
-		reverse_iterator		rend() 			{ return this->_t.rend(); }
-		const_reverse_iterator	rend() const	{ return this->_t.rend(); }
+		reverse_iterator	rbegin() const	{ return this->_t.rbegin(); }
+		reverse_iterator	rend() const	{ return this->_t.rend(); }
 
 		// capacity
 		bool empty() const { return this->_t.empty(); }
