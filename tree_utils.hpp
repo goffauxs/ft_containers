@@ -17,25 +17,25 @@ namespace ft
 
 		static base_ptr _min(base_ptr x)
 		{
-			while (x->left != nullptr) x = x->left;
+			while (x->left != 0) x = x->left;
 			return x;
 		}
 
 		static const_base_ptr _min(const_base_ptr x)
 		{
-			while (x->left != nullptr) x = x->left;
+			while (x->left != 0) x = x->left;
 			return x;
 		}
 
 		static base_ptr _max(base_ptr x)
 		{
-			while (x->right != nullptr) x = x->right;
+			while (x->right != 0) x = x->right;
 			return x;
 		}
 
 		static const_base_ptr _max(const_base_ptr x)
 		{
-			while (x->right != nullptr) x = x->right;
+			while (x->right != 0) x = x->right;
 			return x;
 		}
 	};
@@ -74,7 +74,7 @@ namespace ft
 
 		void reset()
 		{
-			header.parent = nullptr;
+			header.parent = 0;
 			header.left = &header;
 			header.right = &header;
 			node_count = 0;
@@ -94,10 +94,10 @@ namespace ft
 
 	static tree_node_base* ft_tree_increment(tree_node_base* x)
 	{
-		if (x->right != nullptr)
+		if (x->right != 0)
 		{
 			x = x->right;
-			while (x->left != nullptr)
+			while (x->left != 0)
 				x = x->left;
 		}
 		else
@@ -121,10 +121,10 @@ namespace ft
 	{
 		if (!x->is_black && x->parent->parent == x)
 			x = x->right;
-		else if (x->left != nullptr)
+		else if (x->left != 0)
 		{
 			tree_node_base* y = x->left;
-			while (y->right != nullptr)
+			while (y->right != 0)
 				y = y->right;
 			x = y;
 		}
@@ -149,7 +149,7 @@ namespace ft
 		tree_node_base* const y = x->right;
 		
 		x->right = y->left;
-		if (y->left != nullptr)
+		if (y->left != 0)
 			y->left->parent = x;
 		y->parent = x->parent;
 
@@ -168,7 +168,7 @@ namespace ft
 		tree_node_base* const y = x->left;
 
 		x->left = y->right;
-		if (y->right != nullptr)
+		if (y->right != 0)
 			y->right->parent = x;
 		y->parent = x->parent;
 
@@ -188,8 +188,8 @@ namespace ft
 
 		// Insert
 		x->parent = p;
-		x->left = nullptr;
-		x->right = nullptr;
+		x->left = 0;
+		x->right = 0;
 		x->is_black = false;
 
 		if (insert_left)
@@ -219,7 +219,7 @@ namespace ft
 			if (x->parent == gp->left)
 			{
 				tree_node_base* const u = gp->right;
-				if (u != nullptr && !u->is_black)
+				if (u != 0 && !u->is_black)
 				{
 					x->parent->is_black = true;
 					u->is_black = true;
@@ -270,10 +270,10 @@ namespace ft
 		tree_node_base*& leftmost = header.left;
 		tree_node_base*& rightmost = header.right;
 		tree_node_base* y = z;
-		tree_node_base* x = nullptr;
-		tree_node_base* x_parent = nullptr;
+		tree_node_base* x = 0;
+		tree_node_base* x_parent = 0;
 
-		if (y->left == nullptr)
+		if (y->left == 0)
 			x = y->right;
 		else
 		{
@@ -282,7 +282,7 @@ namespace ft
 			else
 			{
 				y = y->right;
-				while (y->left != nullptr)
+				while (y->left != 0)
 					y = y->left;
 				x = y->right;
 			}
@@ -327,14 +327,14 @@ namespace ft
 			}
 			if (leftmost == z)
 			{
-				if (z->right == nullptr)
+				if (z->right == 0)
 					leftmost = z->parent;
 				else
 					leftmost = tree_node_base::_min(x);
 			}
 			if (rightmost == z)
 			{
-				if (z->left == nullptr)
+				if (z->left == 0)
 					rightmost = z->parent;
 				else
 					rightmost = tree_node_base::_max(x);
@@ -343,7 +343,7 @@ namespace ft
 
 		if (y->is_black)
 		{
-			while (x != root && (x == nullptr || x->is_black))
+			while (x != root && (x == 0 || x->is_black))
 			{
 				if (x == x_parent->left)
 				{
@@ -355,7 +355,7 @@ namespace ft
 						ft_tree_rotate_left(x_parent, root);
 						w = x_parent->right;
 					}
-					if ((w->left == nullptr || w->left->is_black) && (w->right == nullptr || w->right->is_black))
+					if ((w->left == 0 || w->left->is_black) && (w->right == 0 || w->right->is_black))
 					{
 						w->is_black = false;
 						x = x_parent;
@@ -363,7 +363,7 @@ namespace ft
 					}
 					else
 					{
-						if (w->right == nullptr || w->right->is_black)
+						if (w->right == 0 || w->right->is_black)
 						{
 							w->left->is_black = true;
 							w->is_black = false;
@@ -388,7 +388,7 @@ namespace ft
 						ft_tree_rotate_right(x_parent, root);
 						w = x_parent->left;
 					}
-					if ((w->right == nullptr || w->right->is_black) && (w->left == nullptr || w->left->is_black))
+					if ((w->right == 0 || w->right->is_black) && (w->left == 0 || w->left->is_black))
 					{
 						w->is_black = false;
 						x = x_parent;
@@ -396,7 +396,7 @@ namespace ft
 					}
 					else
 					{
-						if (w->left == nullptr || w->left->is_black)
+						if (w->left == 0 || w->left->is_black)
 						{
 							w->right->is_black = true;
 							w->is_black = false;

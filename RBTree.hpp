@@ -111,12 +111,12 @@ namespace ft
 			{
 				if (_root)
 				{
-					_root->parent = nullptr;
+					_root->parent = 0;
 					if (_nodes->left)
 						_nodes = _nodes->left;
 				}
 				else
-					_nodes = nullptr;
+					_nodes = 0;
 			}
 
 			~reuse_or_alloc_node() { _t._erase(static_cast<link_type>(_root)); }
@@ -144,7 +144,7 @@ namespace ft
 				{
 					if (_nodes->right == node)
 					{
-						_nodes->right = nullptr;
+						_nodes->right = 0;
 						if (_nodes->left)
 						{
 							_nodes = _nodes->left;
@@ -155,10 +155,10 @@ namespace ft
 						}
 					}
 					else
-						_nodes->left = nullptr;
+						_nodes->left = 0;
 				}
 				else
-					_root = nullptr;
+					_root = 0;
 				return node;
 			}
 
@@ -226,8 +226,8 @@ namespace ft
 		{
 			link_type tmp = node_gen(*x->valptr());
 			tmp->is_black = x->is_black;
-			tmp->left = nullptr;
-			tmp->right = nullptr;
+			tmp->left = 0;
+			tmp->right = 0;
 			return tmp;
 		}
 	protected:
@@ -275,7 +275,7 @@ namespace ft
 			link_type x = _begin();
 			base_ptr y = _end();
 			bool comp = true;
-			while (x != nullptr)
+			while (x != 0)
 			{
 				y = x;
 				comp = impl.key_compare(k, _key(x));
@@ -291,7 +291,7 @@ namespace ft
 			}
 			if (impl.key_compare(_key(j._node), k))
 				return cast(x, y);
-			return cast(j._node, nullptr);
+			return cast(j._node, 0);
 		}
 
 		ft::pair<base_ptr, base_ptr> get_insert_equal_pos(const key_type& k)
@@ -299,7 +299,7 @@ namespace ft
 			typedef ft::pair<base_ptr, base_ptr> cast;
 			link_type x = _begin();
 			base_ptr y = _end();
-			while (x != nullptr)
+			while (x != 0)
 			{
 				y = x;
 				x = impl.key_compare(k, _key(x)) ? _left(x) : _right(x);
@@ -315,7 +315,7 @@ namespace ft
 			if (pos._node == _end())
 			{
 				if (size() > 0 && impl.key_compare(_key(_rightmost()), k))
-					return cast(nullptr, _rightmost());
+					return cast(0, _rightmost());
 				else
 					return get_insert_unique_pos(k);
 			}
@@ -326,8 +326,8 @@ namespace ft
 					return cast(_leftmost(), _leftmost());
 				else if (impl.key_compare(_key((--before)._node), k))
 				{
-					if (_right(before._node) == nullptr)
-						return cast(nullptr, before._node);
+					if (_right(before._node) == 0)
+						return cast(0, before._node);
 					else
 						return cast(pos._node, pos._node);
 				}
@@ -338,11 +338,11 @@ namespace ft
 			{
 				iterator after = pos;
 				if (pos._node == _rightmost())
-					return cast(nullptr, _rightmost());
+					return cast(0, _rightmost());
 				else if (impl.key_compare(k, _key((++after)._node)))
 				{
-					if (_right(pos._node) == nullptr)
-						return cast(nullptr, pos._node);
+					if (_right(pos._node) == 0)
+						return cast(0, pos._node);
 					else
 						return cast(after._node, after._node);
 				}
@@ -350,7 +350,7 @@ namespace ft
 					return get_insert_unique_pos(k);
 			}
 			else
-				return cast(pos._node, nullptr);
+				return cast(pos._node, 0);
 		}
 
 		ft::pair<base_ptr, base_ptr> get_insert_hint_equal_pos(const_iterator position, const key_type& k)
@@ -361,7 +361,7 @@ namespace ft
 			if (pos._node == _end())
 			{
 				if (size() > 0 && !impl.key_compare(k, _key(_rightmost())))
-					return cast(nullptr, _rightmost());
+					return cast(0, _rightmost());
 				else
 					return get_insert_equal_pos(k);
 			}
@@ -372,8 +372,8 @@ namespace ft
 					return cast(_leftmost(), _leftmost());
 				else if (!impl.key_compare(k, _key((--before)._node)))
 				{
-					if (_right(before._node) == nullptr)
-						return cast(nullptr, before._node);
+					if (_right(before._node) == 0)
+						return cast(0, before._node);
 					else
 						return cast(pos._node, pos._node);
 				}
@@ -384,16 +384,16 @@ namespace ft
 			{
 				iterator after = pos;
 				if (pos._node == _rightmost())
-					return cast(nullptr, _rightmost());
+					return cast(0, _rightmost());
 				else if (!impl.key_compare(_key((++after)._node), k))
 				{
-					if (_right(pos._node) == nullptr)
-						return cast(nullptr, pos._node);
+					if (_right(pos._node) == 0)
+						return cast(0, pos._node);
 					else
 						return cast(after._node, after._node);
 				}
 				else
-					return cast(nullptr, nullptr);
+					return cast(0, 0);
 			}
 		}
 	private:
@@ -401,7 +401,7 @@ namespace ft
 		template <typename node_gen>
 		iterator insert(base_ptr x, base_ptr p, const value_type& v, node_gen& gen)
 		{
-			bool insert_left = (x != nullptr || p == _end() || impl.key_compare(KeyOfValue()(v), _key(p)));
+			bool insert_left = (x != 0 || p == _end() || impl.key_compare(KeyOfValue()(v), _key(p)));
 			link_type z = gen(v);
 
 			tree_insert_and_rebalance(insert_left, z, p, this->impl.header);
@@ -423,7 +423,7 @@ namespace ft
 		{
 			link_type x = _begin();
 			base_ptr y = _end();
-			while (x != nullptr)
+			while (x != 0)
 			{
 				y = x;
 				x = !impl.key_compare(_key(x), KeyOfValue()(v)) ? _left(x) : _right(x);
@@ -444,7 +444,7 @@ namespace ft
 				p = top;
 				x = _left(x);
 
-				while (x != nullptr)
+				while (x != 0)
 				{
 					link_type y = clone_node(x, gen);
 					p->left = y;
@@ -481,7 +481,7 @@ namespace ft
 
 		void _erase(link_type x)
 		{
-			while (x != nullptr)
+			while (x != 0)
 			{
 				_erase(_right(x));
 				link_type y = _left(x);
@@ -492,7 +492,7 @@ namespace ft
 
 		iterator _lower_bound(link_type x, base_ptr y, const Key& k)
 		{
-			while (x != nullptr)
+			while (x != 0)
 			{
 				if (!impl.key_compare(_key(x), k))
 				{
@@ -507,7 +507,7 @@ namespace ft
 
 		const_iterator _lower_bound(const_link_type x, const_base_ptr y, const Key& k) const
 		{
-			while (x != nullptr)
+			while (x != 0)
 			{
 				if (!impl.key_compare(_key(x), k))
 				{
@@ -522,7 +522,7 @@ namespace ft
 
 		iterator _upper_bound(link_type x, base_ptr y, const Key& k)
 		{
-			while (x != nullptr)
+			while (x != 0)
 			{
 				if (impl.key_compare(k, _key(x)))
 				{
@@ -537,7 +537,7 @@ namespace ft
 
 		const_iterator _upper_bound(const_link_type x, const_base_ptr y, const Key& k) const
 		{
-			while (x != nullptr)
+			while (x != 0)
 			{
 				if (impl.key_compare(k, _key(x)))
 				{
@@ -555,7 +555,7 @@ namespace ft
 		RBTree(const RBTree& other)
 			: impl(other.impl)
 		{
-			if (other._root() != nullptr)
+			if (other._root() != 0)
 				_root() = copy(other);
 		}
 		~RBTree() { _erase(_begin()); }
@@ -567,7 +567,7 @@ namespace ft
 				reuse_or_alloc_node roan(*this);
 				impl.reset();
 				impl.key_compare = rhs.impl.key_compare;
-				if (rhs._root() != nullptr)
+				if (rhs._root() != 0)
 					_root() = copy(rhs, roan);
 			}
 			return *this;
@@ -590,12 +590,12 @@ namespace ft
 
 		void swap(RBTree& other)
 		{
-			if (_root() == nullptr)
+			if (_root() == 0)
 			{
-				if (other._root() != nullptr)
+				if (other._root() != 0)
 					impl.move_data(other.impl);
 			}
-			else if (other._root() == nullptr)
+			else if (other._root() == 0)
 				other.impl.move_data(impl);
 			else
 			{
@@ -752,7 +752,7 @@ namespace ft
 		{
 			link_type x = _begin();
 			base_ptr y = _end();
-			while (x != nullptr)
+			while (x != 0)
 			{
 				if (impl.key_compare(_key(x), k))
 					x = _right(x);
@@ -778,7 +778,7 @@ namespace ft
 		{
 			const_link_type x = _begin();
 			const_base_ptr y = _end();
-			while (x != nullptr)
+			while (x != 0)
 			{
 				if (impl.key_compare(_key(x), k))
 					x = _right(x);

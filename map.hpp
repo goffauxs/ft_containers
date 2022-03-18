@@ -1,6 +1,5 @@
 #ifndef MAP_H
 # define MAP_H
-# include <functional>
 # include <memory>
 # include "pair.hpp"
 # include "RBTree.hpp"
@@ -39,11 +38,11 @@ namespace ft
 		typedef typename allocator_type::const_pointer		const_pointer;
 		typedef typename allocator_type::reference			reference;
 		typedef typename allocator_type::const_reference	const_reference;
-		typedef typename tree_type::iterator					iterator;
+		typedef typename tree_type::iterator				iterator;
 		typedef typename tree_type::const_iterator			const_iterator;
 		typedef typename tree_type::size_type				size_type;
 		typedef typename tree_type::difference_type			difference_type;
-		typedef typename tree_type::reverse_iterator			reverse_iterator;
+		typedef typename tree_type::reverse_iterator		reverse_iterator;
 		typedef typename tree_type::const_reverse_iterator	const_reverse_iterator;
 
 		// Parametrized Constructor
@@ -171,6 +170,5 @@ namespace ft
 	template <typename Key, typename T, typename Compare, typename Alloc>
 	void swap(map<Key, T, Compare, Alloc>& x, map<Key, T, Compare, Alloc>& y) { x.swap(y); }
 }
-
 
 #endif /* MAP_H */
