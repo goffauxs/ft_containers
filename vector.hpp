@@ -38,7 +38,8 @@ namespace ft
 			const size_type len = this->size() + std::max(this->size(), n);
 			return (len < this->size() || len > this->max_size()) ? this->max_size() : len;
 		}
-		void destroy(iterator first, iterator last)
+		template <typename InputIterator>
+		void destroy(InputIterator first, InputIterator last)
 		{
 			for (; first != last; ++first)
 				this->_alloc.destroy(&(*first));
@@ -52,19 +53,6 @@ namespace ft
 				++result;
 				++first;
 			}
-			return result;
-		}
-		void move_range(pointer from_s, pointer from_e, pointer to)
-		{
-			pointer old_last = this->_finish;
-			difference_type n = old_last - to;
-			for (pointer i = from_s + n; i < from_e; ++i, ++this->_finish)
-				this->_alloc.construct(&(*this->_finish), *i);
-			this->move_backward(from_s, from_s + n, old_last);
-		}
-		iterator move_backward(iterator first, iterator last, iterator result)
-		{
-			while (last != first) *(--result) = *(--last);
 			return result;
 		}
 		void construct_at_end(size_type n, const value_type& x)
@@ -304,39 +292,39 @@ namespace ft
 		// insert
 		iterator insert(iterator position, const value_type& val)
 		{
+			iterator old_pos = position;
 			this->insert(position, 1, val);
-			return position;
+			return old_pos;
 		}
 
 		void insert(iterator position, size_type n, const value_type& val)
 		{
-			pointer p = &(*position);
+			pointer p = this->_start + (position - begin());
 			if (n > 0)
 			{
-				if (size_type(this->_end_of_storage - this->_finish) >= n)
+				if (size_type(this->_end_of_storage - this->_finish) >= n) // no need to allocate
 				{
-					const size_type elems_after = this->end() - position;
-					size_type old_n = n;
+					const size_type elems_after = end() - position;
 					pointer old_finish(this->_finish);
-					if (n > elems_after)
+					if (elems_after > n)
 					{
-						size_type diff = n - elems_after;
-						this->construct_at_end(diff, val);
-						n -= diff;
+						std::uninitialized_copy(this->_finish - n, this->_finish, this->_finish);
+						this->destroy(this->_finish - n, this->_finish);
+						this->_finish += n;
+						std::copy_backward(position.base(), old_finish - n, old_finish);
+						this->destroy(position.base(), old_finish - n);
+						this->destroy(position.base(), position.base());
 					}
-					if (n > 0)
+					else
 					{
-						difference_type diff = old_finish - (p + n);
-						for (pointer i = p + diff; i < old_finish; ++i, ++this->_finish)
-							this->_alloc.construct(&(*this->_finish), *i);
-						this->move_backward(p, p + diff, old_finish);
-						const_pointer xr = static_cast<const_pointer>(&val);
-						if (p <= xr && xr < this->_finish)
-							xr += old_n;
-						std::fill_n(p, n, *xr);
+						this->_finish = std::uninitialized_fill_n(this->_finish, n - elems_after, val);
+						std::uninitialized_copy(position.base(), old_finish, this->_finish);
+						this->destroy(position.base(), old_finish);
+						this->_finish += elems_after;
+						this->destroy(position.base(), old_finish);
 					}
 				}
-				else
+				else // need to allocate
 				{
 					size_type len = this->check_len(n, "vector::insert");
 					const size_type elems_before = position - this->begin();
@@ -355,7 +343,6 @@ namespace ft
 					std::swap(this->_start, new_start);
 					std::swap(this->_finish, new_finish);
 					std::swap(this->_end_of_storage, new_end_cap);
-					// TODO probably delete the contents of the old vector
 				}
 			}
 		}
@@ -364,45 +351,52 @@ namespace ft
 		void insert(iterator position, InputIterator first, InputIterator last,
 			typename ft::enable_if<!ft::is_integral<InputIterator>::value>::type* = NULL)
 		{
-			pointer p = &(*position);
-			difference_type n = ft::distance(first, last);
-			if (n > 0)
+			if (first != last)
 			{
-				if (n <= this->_end_of_storage - this->_finish)
+				const size_type n = ft::distance(first, last);
+				if (n <= size_type(this->_end_of_storage - this->_finish))
 				{
-					size_type old_n = n;
-					pointer old_last = this->_finish;
-					InputIterator m = last;
-					difference_type elems_after = this->_finish - p;
-					if (n > elems_after)
+					const size_type elems_after = end() - position;
+					pointer old_finish(this->_finish);
+					if (elems_after > n)
 					{
-						m = first;
-						difference_type diff = this->_finish - p;
-						ft::advance(m, diff);
-						this->construct_at_end(first, last);
-						n = elems_after;
+						std::uninitialized_copy(this->_finish - n, this->_finish, this->_finish);
+						this->destroy(this->_finish - n, this->_finish);
+						this->_finish += n;
+						std::copy_backward(position.base(), old_finish - n, old_finish);
+						this->destroy(position.base(), old_finish - n);
+						std::copy(first, last, position);
 					}
-					if (n > 0)
+					else
 					{
-						move_range(p, old_last, p + old_n);
-						std::copy(first, m, p);
+						InputIterator mid = first;
+						ft::advance(mid, elems_after);
+						std::uninitialized_copy(mid, last, this->_finish);
+						this->_finish += n - elems_after;
+						std::uninitialized_copy(position.base(), old_finish, this->_finish);
+						this->destroy(position.base(), old_finish);
+						this->_finish += elems_after;
+						std::copy(first, mid, position);
 					}
 				}
 				else
 				{
-					size_type len = this->check_len(n, "vector::insert");
-					const size_type elems_before = position - this->begin();
-					pointer new_first(this->_alloc.allocate(len));
-					pointer new_end_cap(new_first + len);
-					pointer new_start(new_first + elems_before);
+					const size_type len = this->check_len(n, "vector::insert");
+					pointer new_start(this->_alloc.allocate(len));
 					pointer new_finish(new_start);
-					for (; first != last; ++first, ++new_finish)
-						this->_alloc.construct(new_finish, *first);
-					this->construct_backward(this->_start, p, new_start);
-					this->construct_forward(p, this->_finish, new_finish);
-					std::swap(this->_start, new_start);
-					std::swap(this->_finish, new_finish);
-					std::swap(this->_end_of_storage, new_end_cap);
+					try
+					{
+						new_finish = std::uninitialized_copy(this->_start, position.base(), new_start);
+						this->destroy(this->_start, position.base());
+						new_finish = std::uninitialized_copy(first, last, new_finish);
+						new_finish = std::uninitialized_copy(position.base(), this->_finish, new_finish);
+						this->destroy(position.base(), this->_finish);
+					}
+					catch (...)
+					{
+						this->destroy(new_start, new_finish);
+						this->_alloc.deallocate(new_start, len);
+					}
 				}
 			}
 		}
