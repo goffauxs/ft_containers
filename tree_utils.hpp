@@ -88,8 +88,8 @@ namespace ft
 
 		T value_field;
 
-				T* valptr()			{ return std::addressof(value_field); }
-		const	T* valptr() const	{ return std::addressof(value_field); }
+				T* valptr()			{ return &value_field; }
+		const	T* valptr() const	{ return &value_field; }
 	};
 
 	static tree_node_base* ft_tree_increment(tree_node_base* x)
