@@ -381,19 +381,24 @@ namespace ft
 					const size_type len = this->check_len(n, "vector::insert");
 					pointer new_start(this->_alloc.allocate(len));
 					pointer new_finish(new_start);
-					try
-					{
+					// try
+					// {
 						new_finish = std::uninitialized_copy(this->_start, position.base(), new_start);
 						this->destroy(this->_start, position.base());
 						new_finish = std::uninitialized_copy(first, last, new_finish);
 						new_finish = std::uninitialized_copy(position.base(), this->_finish, new_finish);
 						this->destroy(position.base(), this->_finish);
-					}
-					catch (...)
-					{
-						this->destroy(new_start, new_finish);
-						this->_alloc.deallocate(new_start, len);
-					}
+					// }
+					// catch (...)
+					// {
+					// 	this->destroy(new_start, new_finish);
+					// 	this->_alloc.deallocate(new_start, len);
+					// }
+					this->destroy(this->_start, this->_finish);
+					this->_alloc.deallocate(this->_start, this->_end_of_storage - this->_start);
+					this->_start = new_start;
+					this->_finish = new_finish;
+					this->_end_of_storage = new_start + len;
 				}
 			}
 		}
