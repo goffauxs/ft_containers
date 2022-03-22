@@ -85,10 +85,7 @@ namespace ft
 		void construct_backward(pointer begin1, pointer end1, pointer& end2)
 		{
 			while (end1 != begin1)
-			{
-				this->_alloc.construct(&(*(end2 - 1)), *--end1);
-				--end2;
-			}
+				this->_alloc.construct(&(*(--end2)), *(--end1));
 		}
 	public:
 		// Default constructor
@@ -292,9 +289,9 @@ namespace ft
 		// insert
 		iterator insert(iterator position, const value_type& val)
 		{
-			iterator old_pos = position;
-			this->insert(position, 1, val);
-			return old_pos;
+			const size_type n = position - begin();
+			insert(position, 1, val);
+			return iterator(this->_start + n);
 		}
 
 		void insert(iterator position, size_type n, const value_type& val)
@@ -311,9 +308,9 @@ namespace ft
 						std::uninitialized_copy(this->_finish - n, this->_finish, this->_finish);
 						this->destroy(this->_finish - n, this->_finish);
 						this->_finish += n;
-						std::copy_backward(position.base(), old_finish - n, old_finish);
+						this->construct_backward(position.base(), old_finish - n, old_finish);
 						this->destroy(position.base(), old_finish - n);
-						this->destroy(position.base(), position.base());
+						std::fill(position.base(), position.base() + n, val);
 					}
 					else
 					{
