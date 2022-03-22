@@ -31,6 +31,13 @@ namespace ft
 		pointer			_finish;
 		pointer			_end_of_storage;
 
+		template <typename InputIterator>
+		pointer allocate_and_copy(size_type n, InputIterator first, InputIterator last)
+		{
+			pointer result = this->_alloc.allocate(n);
+			std::uninitialized_copy(first, last, result);
+			return result;
+		}
 		size_type check_len(size_type n, const char* s) const
 		{
 			if (this->max_size() - this->size() < n)
@@ -128,6 +135,12 @@ namespace ft
 			while (n--) this->_alloc.construct(this->_finish++, *p++);
 		}
 
+		~vector()
+		{
+			this->destroy(this->_start, this->_finish);
+			this->_alloc.deallocate(this->_start, this->_end_of_storage - this->_start);
+		}
+
 		// Assignement operator
 		vector& operator=(const vector& rhs)
 		{
@@ -193,16 +206,13 @@ namespace ft
 				throw std::length_error("vector::reserve");
 			if (n > this->capacity())
 			{
-				iterator old_start = this->begin();
-				iterator old_end = this->end();
-				size_type old_capacity = this->capacity();
-
-				this->_start = this->_alloc.allocate(n);
-				this->_finish = this->_start;
+				const size_type old_size = size();
+				pointer tmp = allocate_and_copy(n, this->_start, this->_finish);
+				this->destroy(this->_start, this->_finish);
+				this->_alloc.deallocate(this->_start, this->_end_of_storage - this->_start);
+				this->_start = tmp;
+				this->_finish = tmp + old_size;
 				this->_end_of_storage = this->_start + n;
-				for (iterator it = old_start; it != old_end; it++, this->_finish++) this->_alloc.construct(this->_finish, *it);
-				for (; old_end != old_start; old_end--) this->_alloc.destroy(old_end.base());
-				this->_alloc.deallocate(old_start.base(), old_capacity);
 			}
 		}
 
