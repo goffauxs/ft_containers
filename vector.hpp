@@ -333,23 +333,20 @@ namespace ft
 				}
 				else // need to allocate
 				{
-					size_type len = this->check_len(n, "vector::insert");
-					const size_type elems_before = position - this->begin();
-					pointer first(this->_alloc.allocate(len));
-					pointer new_end_cap(first + len);
-					pointer new_start(first + elems_before);
+					const size_type len = check_len(n, "vector::insert");
+					const size_type elems_before = position - begin();
+					pointer new_start(this->_alloc.allocate(len));
 					pointer new_finish(new_start);
-					while (n > 0)
-					{
-						this->_alloc.construct(&(*new_finish), val);
-						++new_finish;
-						--n;
-					}
-					this->construct_backward(this->_start, p, new_start);
-					this->construct_forward(p, this->_finish, new_finish);
-					std::swap(this->_start, new_start);
-					std::swap(this->_finish, new_finish);
-					std::swap(this->_end_of_storage, new_end_cap);
+					std::uninitialized_fill_n(new_start + elems_before, n, val);
+					new_finish = std::uninitialized_copy(this->_start, position.base(), new_start);
+					this->destroy(this->_start, position.base());
+					new_finish += n;
+					new_finish = std::uninitialized_copy(position.base(), this->_finish, new_finish);
+					this->destroy(this->_start, this->_finish);
+					this->_alloc.deallocate(this->_start, this->_end_of_storage - this->_start);
+					this->_start = new_start;
+					this->_finish = new_finish;
+					this->_end_of_storage = new_start + len;
 				}
 			}
 		}
@@ -391,19 +388,11 @@ namespace ft
 					const size_type len = this->check_len(n, "vector::insert");
 					pointer new_start(this->_alloc.allocate(len));
 					pointer new_finish(new_start);
-					// try
-					// {
-						new_finish = std::uninitialized_copy(this->_start, position.base(), new_start);
-						this->destroy(this->_start, position.base());
-						new_finish = std::uninitialized_copy(first, last, new_finish);
-						new_finish = std::uninitialized_copy(position.base(), this->_finish, new_finish);
-						this->destroy(position.base(), this->_finish);
-					// }
-					// catch (...)
-					// {
-					// 	this->destroy(new_start, new_finish);
-					// 	this->_alloc.deallocate(new_start, len);
-					// }
+					new_finish = std::uninitialized_copy(this->_start, position.base(), new_start);
+					this->destroy(this->_start, position.base());
+					new_finish = std::uninitialized_copy(first, last, new_finish);
+					new_finish = std::uninitialized_copy(position.base(), this->_finish, new_finish);
+					this->destroy(position.base(), this->_finish);
 					this->destroy(this->_start, this->_finish);
 					this->_alloc.deallocate(this->_start, this->_end_of_storage - this->_start);
 					this->_start = new_start;
