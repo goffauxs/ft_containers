@@ -306,7 +306,6 @@ namespace ft
 
 		void insert(iterator position, size_type n, const value_type& val)
 		{
-			pointer p = this->_start + (position - begin());
 			if (n > 0)
 			{
 				if (size_type(this->_end_of_storage - this->_finish) >= n) // no need to allocate
