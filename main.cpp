@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
-#include <time.h>
 #include <deque>
+#include <typeinfo>
+#include <fstream>
+#define STR(x) #x
+#define STRMACRO(y) STR(y)
 
 #ifdef STD
 # include <vector>
@@ -16,6 +19,15 @@
 # include "set.hpp"
 # define TESTED_NAMESPACE ft
 #endif
+
+class foo
+{
+private:
+	int* _mfoo;
+public:
+	foo() : _mfoo(new int(42)) {}
+	~foo() { delete _mfoo; }
+};
 
 #define MAX_RAM 4294967296
 #define BUFFER_SIZE 4096
@@ -1227,19 +1239,25 @@ void set_tests()
 
 int main(int argc, char** argv)
 {
-#ifdef STD
-	std::cout << "\t---STD---\n" << std::endl;
-#else
-	std::cout << "\t---FT---\n" << std::endl;
-#endif
+// #ifdef STD
+// 	std::cout << "\t---STD---\n" << std::endl;
+// #else
+// 	std::cout << "\t---FT---\n" << std::endl;
+// #endif
+
+	std::string nspace(STRMACRO(TESTED_NAMESPACE));
+	nspace.append("_out");
+	std::ofstream std_out(nspace);
+	std::cout.rdbuf(std_out.rdbuf());
+
 	vector_tests();
 	stack_tests();
 	map_tests();
 	set_tests();
 
-	TESTED_NAMESPACE::vector<int> v;
-	v.pop_back();
-	std::cout << "size: " << v.size() << std::endl;
+	typedef TESTED_NAMESPACE::iterator_traits<TESTED_NAMESPACE::vector<int>::iterator > traits;
+	if (typeid(traits::iterator_category) == typeid(TESTED_NAMESPACE::random_access_iterator_tag))
+		std::cout << "vector<int>::iterator is a random access iterator" << std::endl;
 
 	if (argc != 2)
 	{
@@ -1286,13 +1304,13 @@ int main(int argc, char** argv)
 	
 	for (int i = 0; i < COUNT; ++i)
 	{
-		map_int.insert(TESTED_NAMESPACE::make_pair(rand(), rand()));
+		map_int.insert(TESTED_NAMESPACE::make_pair(rand() % COUNT, rand() % COUNT));
 	}
 
 	int sum = 0;
 	for (int i = 0; i < 10000; i++)
 	{
-		int access = rand();
+		int access = rand() % COUNT;
 		sum += map_int[access];
 	}
 	std::cout << "should be constant with the same seed: " << sum << std::endl;
@@ -1308,5 +1326,8 @@ int main(int argc, char** argv)
 		std::cout << *it;
 	}
 	std::cout << std::endl;
+
+	std_out.close();
+
 	return (0);
 }
