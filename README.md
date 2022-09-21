@@ -1,6 +1,6 @@
 # ft_containers
 
-Reimplementation of `vector`, `stack`, `map`, and `set` containers in a new namespace only using `<memory>` and `<algorithm>` functions from the Standard Library.
+Reimplementation of `vector`, `stack`, `map`, and `set` containers in a new namespace using only `<memory>` and `<algorithm>` functions from the Standard Library.
 
 ## Performance
 The performance of the containers in the `ft` namespace is similar to that of the standard library as shown below: 
