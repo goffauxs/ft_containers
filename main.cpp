@@ -1248,6 +1248,7 @@ int main(int argc, char** argv)
 	std::string nspace(STRMACRO(TESTED_NAMESPACE));
 	nspace.append("_out");
 	std::ofstream std_out(nspace);
+	std::streambuf *backup = std::cout.rdbuf();
 	std::cout.rdbuf(std_out.rdbuf());
 
 	vector_tests();
@@ -1328,6 +1329,10 @@ int main(int argc, char** argv)
 	std::cout << std::endl;
 
 	std_out.close();
+
+	std::cout.rdbuf(backup);
+
+	std::cout << "Output of tests written to " << STRMACRO(TESTED_NAMESPACE) << "_out." << std::endl;
 
 	return (0);
 }

@@ -1,9 +1,9 @@
 #ifndef VECTOR_H
 # define VECTOR_H
-# include "random_access_iterator.hpp"
-# include "reverse_iterator.hpp"
-# include "type_traits.hpp"
-# include "utils.hpp"
+# include "../iterator/random_access_iterator.hpp"
+# include "../iterator/reverse_iterator.hpp"
+# include "../utils/type_traits.hpp"
+# include "../utils/utils.hpp"
 # include <memory>
 # include <iostream>
 

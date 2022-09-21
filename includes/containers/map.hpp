@@ -1,8 +1,8 @@
 #ifndef MAP_H
 # define MAP_H
 # include <memory>
-# include "pair.hpp"
-# include "RBTree.hpp"
+# include "../utils/pair.hpp"
+# include "../red_black_tree/RBTree.hpp"
 
 namespace ft
 {

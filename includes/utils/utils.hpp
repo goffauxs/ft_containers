@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 # define UTILS_H
 # include "type_traits.hpp"
-# include "iterator_traits.hpp"
+# include "../iterator/iterator_traits.hpp"
 
 namespace ft
 {

@@ -6,7 +6,7 @@ RAND		=	$$RANDOM
 NAME		=	$(FT) $(STD)
 
 CC			=	clang++
-INCLUDES	=	includes
+INCLUDES	=	includes/containers
 CPPFLAGS	=	-Wall -Werror -Wextra -I$(INCLUDES)
 RM			=	rm -rf
 

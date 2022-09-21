@@ -1,10 +1,10 @@
 #ifndef RBTREE_H
 # define RBTREE_H
 # include <memory>
-# include "reverse_iterator.hpp"
-# include "utils.hpp"
+# include "../iterator/reverse_iterator.hpp"
+# include "../utils/utils.hpp"
 # include "tree_utils.hpp"
-# include "pair.hpp"
+# include "../utils/pair.hpp"
 
 namespace ft
 {
